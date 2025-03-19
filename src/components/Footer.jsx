@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 function Footer() {
   return (
@@ -12,7 +12,7 @@ function Footer() {
         {/* Footer Details */}
         <div className="mb-6">
           <p className="text-sm text-gray-300">
-            Site web créé par{' '}
+            Site web créé par{" "}
             <a
               href="https://lamraslibadr.netlify.app/"
               target="_blank"
@@ -20,8 +20,8 @@ function Footer() {
               className="text-blue-400 hover:text-blue-300 hover:underline transition-colors duration-300"
             >
               <strong>Badr Lamrasli</strong>
-            </a>
-            {' '}| Contact :{' '}
+            </a>{" "}
+            | Contact :{" "}
             <a
               href="mailto:info@gestion-equipements.com"
               className="text-blue-400 hover:text-blue-300 hover:underline transition-colors duration-300"
@@ -33,32 +33,23 @@ function Footer() {
 
         {/* Footer Links */}
         <div className="flex justify-center gap-6 text-sm">
-          <a
-            href="#"
-            className="text-blue-400 hover:text-blue-300 hover:underline transition-colors duration-300"
-          >
+          <button className="text-blue-400 hover:text-blue-300 hover:underline transition-colors duration-300">
             Politique de confidentialité
-          </a>
+          </button>
           <span className="text-gray-400">|</span>
-          <a
-            href="#"
-            className="text-blue-400 hover:text-blue-300 hover:underline transition-colors duration-300"
-          >
+          <button className="text-blue-400 hover:text-blue-300 hover:underline transition-colors duration-300">
             Conditions d'utilisation
-          </a>
+          </button>
           <span className="text-gray-400">|</span>
-          <a
-            href="#"
-            className="text-blue-400 hover:text-blue-300 hover:underline transition-colors duration-300"
-          >
+          <button className="text-blue-400 hover:text-blue-300 hover:underline transition-colors duration-300">
             Aide
-          </a>
+          </button>
         </div>
 
-        {/* Social Media Icons (Optional) */}
+        {/* Social Media Icons */}
         <div className="mt-6 flex justify-center space-x-6">
           <a
-            href="#"
+            href="https://www.linkedin.com/in/profil"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-300 hover:text-blue-400 transition-colors duration-300"
@@ -73,7 +64,7 @@ function Footer() {
             </svg>
           </a>
           <a
-            href="#"
+            href="https://twitter.com/profil"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-300 hover:text-blue-400 transition-colors duration-300"
@@ -88,7 +79,7 @@ function Footer() {
             </svg>
           </a>
           <a
-            href="#"
+            href="https://facebook.com/profil"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-300 hover:text-blue-400 transition-colors duration-300"
@@ -102,8 +93,6 @@ function Footer() {
               <path d="M12 2.04c-5.5 0-9.96 4.46-9.96 9.96 0 4.41 3.61 8.09 8.28 9.36v-6.61h-2.49v-2.75h2.49v-2.1c0-2.48 1.51-3.84 3.73-3.84 1.08 0 2.21.19 2.21.19v2.43h-1.25c-1.23 0-1.61.76-1.61 1.54v1.86h2.73l-.44 2.75h-2.29v6.61c4.67-1.27 8.28-4.95 8.28-9.36 0-5.5-4.46-9.96-9.96-9.96z" />
             </svg>
           </a>
-        </div>
-        <div>
         </div>
       </div>
     </footer>

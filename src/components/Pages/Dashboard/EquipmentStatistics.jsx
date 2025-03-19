@@ -54,7 +54,7 @@ const EquipmentStatistics = ({ equipmentList }) => {
   const [bureauStats, setBureauStats] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [showOffcanvas, setShowOffcanvas] = useState(false);
-  const [selectedEquipment, setSelectedEquipment] = useState(null); //No change: still used for hover effects
+  const [setSelectedEquipment] = useState(null); //No change: still used for hover effects
   const handleChartClick = () => {
     setShowOffcanvas(true);
   };
