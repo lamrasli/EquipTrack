@@ -39,12 +39,25 @@ export const equipmentModels = {
     Canon: ["Selphy CP1300", "Selphy Square QX10"],
   },
 };
+export const directions = [
+  "DRH",
+  "DAFG",
+  "DSI",
+  "DCOM",
+  "DQ",
+  "DAJ",
+  "DSE",
+  "DDE",
+  "DAC",
+  "DP",
+];
 
 const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
   const [formData, setFormData] = useState({
     type: "",
     marque: "",
     modele: "",
+    direction: "",
     numero_serie: "",
     bureau: "",
     statut: "",
@@ -57,6 +70,7 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
       setFormData({ ...editEquipment });
     } else {
       setFormData({
+        direction: "",
         type: "",
         marque: "",
         modele: "",
@@ -71,7 +85,7 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
 
   // Fonction pour valider le numéro de série
   const validateSerialNumber = (value) => {
-    const regex = /^[A-Z0-9]*$/; // Seules les majuscules et les chiffres sont autorisés
+    const regex = /^[A-Z0-9]*$/;
     return regex.test(value);
   };
 
@@ -79,7 +93,6 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
     const { name, value } = e.target;
 
     if (name === "numero_serie") {
-      // Convertir en majuscules et valider
       const upperCaseValue = value.toUpperCase();
       if (!validateSerialNumber(upperCaseValue)) {
         setSerialError("Seules les majuscules et les chiffres sont autorisés.");
@@ -95,13 +108,10 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
   const handleTypeChange = (e) => {
     const { value } = e.target;
     setFormData({
+      ...formData,
       type: value,
       marque: "",
       modele: "",
-      numero_serie: "",
-      bureau: "",
-      statut: "",
-      date: "",
     });
     setSerialError("");
   };
@@ -114,14 +124,12 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Vérifier si le numéro de série est valide
+    console.log("Données soumises:", formData);
     if (!validateSerialNumber(formData.numero_serie)) {
       setSerialError("Seules les majuscules et les chiffres sont autorisés.");
       return;
     }
 
-    // Vérifier si le numéro de série existe déjà
     const isDuplicate = equipmentList.some(
       (item) =>
         item.numero_serie === formData.numero_serie &&
@@ -140,6 +148,7 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
       onAdd(formData);
     }
     setFormData({
+      direction: "",
       type: "",
       marque: "",
       modele: "",
@@ -151,207 +160,207 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
   };
 
   return (
-    <motion.form
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      onSubmit={handleSubmit}
-      className="bg-white mt-6 mb-6 p-8 rounded-lg shadow-xl border border-gray-200"
-    >
-      <motion.h2
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-        className="text-2xl font-bold text-gray-800 text-center uppercase p-4 rounded-lg bg-gradient-to-b from-gray-500 to-gray-800 text-white shadow-md mb-6"
-      >
-        {editEquipment ? "Modifier un Équipement" : "Ajouter un Équipement"}
-      </motion.h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
-          className="space-y-2"
-        >
-          <label className="block text-sm font-medium text-gray-700">
-            Type
-          </label>
-          <select
-            name="type"
-            value={formData.type}
-            onChange={handleTypeChange}
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-          >
-            <option value="">Sélectionner un type</option>
-            {Object.keys(equipmentModels).map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
-          className="space-y-2"
-        >
-          <label className="block text-sm font-medium text-gray-700">
-            Marque
-          </label>
-          <select
-            name="marque"
-            value={formData.marque}
-            onChange={handleMarqueChange}
-            required
-            disabled={!formData.type}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-          >
-            <option value="">Sélectionner une marque</option>
-            {formData.type &&
-              Object.keys(equipmentModels[formData.type]).map((marque) => (
-                <option key={marque} value={marque}>
-                  {marque}
-                </option>
-              ))}
-          </select>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.8, ease: "easeOut" }}
-          className="space-y-2"
-        >
-          <label className="block text-sm font-medium text-gray-700">
-            Modèle
-          </label>
-          <select
-            name="modele"
-            value={formData.modele}
-            onChange={handleChange}
-            required
-            disabled={!formData.marque}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-          >
-            <option value="">Sélectionner un modèle</option>
-            {formData.marque &&
-              equipmentModels[formData.type][formData.marque].map((model) => (
-                <option key={model} value={model}>
-                  {model}
-                </option>
-              ))}
-          </select>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 1, ease: "easeOut" }}
-          className="space-y-2"
-        >
-          <label className="block text-sm font-medium text-gray-700">
-            Numéro de série
-          </label>
-          <input
-            name="numero_serie"
-            value={formData.numero_serie}
-            onChange={handleChange}
-            placeholder="Numéro de série"
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-          />
-          <AnimatePresence>
-            {serialError && (
-              <motion.p
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="text-red-500 text-sm"
-              >
-                {serialError}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 1.2, ease: "easeOut" }}
-          className="space-y-2"
-        >
-          <label className="block text-sm font-medium text-gray-700">
-            Bureau
-          </label>
-          <input
-            name="bureau"
-            value={formData.bureau}
-            onChange={handleChange}
-            placeholder="Bureau"
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-          />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 1.4, ease: "easeOut" }}
-          className="space-y-2"
-        >
-          <label className="block text-sm font-medium text-gray-700">
-            Statut
-          </label>
-          <select
-            name="statut"
-            value={formData.statut}
-            onChange={handleChange}
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-          >
-            <option value="">Sélectionner un statut</option>
-            <option value="Fonctionnel">Fonctionnel</option>
-            <option value="Réformé en bureau">Réformé en bureau</option>
-            <option value="Réformé en stock">Réformé en stock</option>
-          </select>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 1.6, ease: "easeOut" }}
-          className="space-y-2"
-        >
-          <label className="block text-sm font-medium text-gray-700">
-            Date
-          </label>
-          <input
-            name="date"
-            type="date"
-            value={formData.date}
-            onChange={handleChange}
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-          />
-        </motion.div>
-      </div>
-      <motion.div
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 1.6, ease: "easeOut" }}
-        className="flex justify-center mt-8"
+        transition={{ duration: 0.3 }}
+        className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200"
       >
-        <button
-          type="submit"
-          className="bg-gradient-to-b from-gray-500 to-gray-800 text-white text-lg py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105"
-        >
-          {editEquipment ? "Modifier" : "Ajouter"}
-        </button>
+        {/* En-tête du formulaire */}
+        <div className="bg-gradient-to-r from-gray-600 to-gray-800 p-6 text-white">
+          <h2 className="text-2xl font-bold text-center">
+            {editEquipment ? "Modifier un Équipement" : "Ajouter un Équipement"}
+          </h2>
+        </div>
+
+        {/* Corps du formulaire - Structure conservée mais style amélioré */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Direction */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Direction <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="direction"
+                value={formData.direction}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              >
+                <option value="">Sélectionner une direction</option>
+                {directions.map((direction) => (
+                  <option key={direction} value={direction}>
+                    {direction}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Type */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="type"
+                value={formData.type}
+                onChange={handleTypeChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              >
+                <option value="">Sélectionner un type</option>
+                {Object.keys(equipmentModels).map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Marque */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Marque <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="marque"
+                value={formData.marque}
+                onChange={handleMarqueChange}
+                required
+                disabled={!formData.type}
+                className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  !formData.type ? "bg-gray-100" : ""
+                }`}
+              >
+                <option value="">Sélectionner une marque</option>
+                {formData.type &&
+                  Object.keys(equipmentModels[formData.type]).map((marque) => (
+                    <option key={marque} value={marque}>
+                      {marque}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {/* Modèle */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Modèle <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="modele"
+                value={formData.modele}
+                onChange={handleChange}
+                required
+                disabled={!formData.marque}
+                className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                  !formData.marque ? "bg-gray-100" : ""
+                }`}
+              >
+                <option value="">Sélectionner un modèle</option>
+                {formData.marque &&
+                  equipmentModels[formData.type][formData.marque].map((model) => (
+                    <option key={model} value={model}>
+                      {model}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {/* Numéro de série */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Numéro de série <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="numero_serie"
+                value={formData.numero_serie}
+                onChange={handleChange}
+                placeholder="Ex: ABC123456"
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              />
+              <AnimatePresence>
+                {serialError && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="text-red-500 text-sm"
+                  >
+                    {serialError}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Bureau */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Bureau <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="bureau"
+                value={formData.bureau}
+                onChange={handleChange}
+                placeholder="Ex: Bureau 205, Bâtiment A"
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              />
+            </div>
+
+            {/* Statut */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Statut <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="statut"
+                value={formData.statut}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              >
+                <option value="">Sélectionner un statut</option>
+                <option value="Fonctionnel">Fonctionnel</option>
+                <option value="Réformé en bureau">Réformé en bureau</option>
+                <option value="Réformé en stock">Réformé en stock</option>
+              </select>
+            </div>
+
+            {/* Date */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleChange}
+                required
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              />
+            </div>
+          </div>
+
+          {/* Bouton de soumission */}
+          <div className="flex justify-center pt-6">
+            <button
+              type="submit"
+              className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              {editEquipment ? "Modifier l'équipement" : "Ajouter l'équipement"}
+            </button>
+          </div>
+        </form>
       </motion.div>
-    </motion.form>
+    </div>
   );
 };
 

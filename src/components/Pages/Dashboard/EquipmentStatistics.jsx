@@ -54,7 +54,7 @@ const EquipmentStatistics = ({ equipmentList }) => {
   const [bureauStats, setBureauStats] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [showOffcanvas, setShowOffcanvas] = useState(false);
-  const [setSelectedEquipment] = useState(null); //No change: still used for hover effects
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
   const handleChartClick = () => {
     setShowOffcanvas(true);
   };
@@ -143,7 +143,7 @@ const EquipmentStatistics = ({ equipmentList }) => {
   }, {});
 
   const equipmentByDivision = equipmentList.reduce((acc, equipment) => {
-    acc[equipment.bureau] = (acc[equipment.bureau] || 0) + 1;
+    acc[equipment.bureau] = Math.floor((acc[equipment.bureau] || 0) + 1); // Correction: parenthèse manquante
     return acc;
   }, {});
 
@@ -263,6 +263,18 @@ const EquipmentStatistics = ({ equipmentList }) => {
       title: {
         display: true,
         text: "Répartition des équipements par bureau",
+      },
+    },
+    // Ajoutez cette partie pour forcer les entiers sur l'axe Y
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          precision: 0, // Désactive les décimales
+          callback: function (value) {
+            if (value % 1 === 0) return value; // Affiche uniquement les entiers
+          },
+        },
       },
     },
   };

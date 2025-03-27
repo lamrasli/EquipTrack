@@ -1,6 +1,6 @@
 const Container = (props) => {
   return (
-    <div style={{ width: "80%", margin: "0 auto" }}>
+    <div style={{ width: "90%", margin: "0 auto" }}>
       {props.children}
     </div>
   );
