@@ -152,34 +152,6 @@ const EquipmentDocumentation = () => {
     }
   }, [equipmentId, equipments]);
 
-  // Composant Toggle
-  const AvailabilityToggle = ({ equipment }) => {
-    return (
-      <label className="inline-flex items-center cursor-pointer">
-        <input
-          type="checkbox"
-          checked={equipment.specs.statut === "Indisponible"}
-          onChange={async (e) => {
-            e.stopPropagation();
-            await toggleAvailability(equipment.id, e);
-          }}
-          className="sr-only peer"
-        />
-        <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-300 peer-checked:bg-red-600">
-          <div
-            className={`absolute top-0.5 ${
-              equipment.specs.statut === "Indisponible"
-                ? "right-0.5"
-                : "left-0.5"
-            } bg-white border-gray-300 rounded-full h-5 w-5 transition-all`}
-          ></div>
-        </div>
-        <span className="ml-2 text-sm font-medium">
-          {equipment.specs.statut}
-        </span>
-      </label>
-    );
-  };
 
   // Composant Switch
   const AvailabilitySwitch = ({ equipment }) => {
