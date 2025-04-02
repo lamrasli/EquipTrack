@@ -152,7 +152,6 @@ const EquipmentDocumentation = () => {
     }
   }, [equipmentId, equipments]);
 
-
   // Composant Switch
   const AvailabilitySwitch = ({ equipment }) => {
     const isAvailable = equipment.specs.statut === "Disponible";
