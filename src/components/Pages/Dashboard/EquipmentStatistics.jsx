@@ -57,7 +57,7 @@ const EquipmentStatistics = ({ equipmentList }) => {
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
   const [selectedDirection, setSelectedDirection] = useState(null);
   const [selectedBureau, setSelectedBureau] = useState(null);
   const [isDirectionDropdownOpen, setIsDirectionDropdownOpen] = useState(false);
