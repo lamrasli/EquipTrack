@@ -202,10 +202,7 @@ const EquipmentStatistics = ({ equipmentList }) => {
     return acc;
   }, {});
 
-  const equipmentByDivision = equipmentList.reduce((acc, equipment) => {
-    acc[equipment.bureau] = Math.floor((acc[equipment.bureau] || 0) + 1);
-    return acc;
-  }, {});
+
 
   const equipmentByBrand = equipmentList.reduce((acc, equipment) => {
     acc[equipment.marque] = (acc[equipment.marque] || 0) + 1;
@@ -265,18 +262,6 @@ const EquipmentStatistics = ({ equipmentList }) => {
     ],
   };
 
-  const barChartData = {
-    labels: Object.keys(equipmentByCategory),
-    datasets: [
-      {
-        label: "Nombre d'équipements par catégorie",
-        data: Object.values(equipmentByCategory),
-        backgroundColor: "rgba(226, 140, 60, 0.58)",
-        borderColor: "rgb(104, 49, 12)",
-        borderWidth: 1,
-      },
-    ],
-  };
 
   const doughnutChartData = {
     labels: ["Réformé en bureau", "Réformé en stock", "Fonctionnel"],
@@ -370,58 +355,6 @@ const EquipmentStatistics = ({ equipmentList }) => {
   );
   const totalPages = Math.ceil(reformedEquipments.length / itemsPerPage);
 
-  // Generate pagination buttons
-  const renderPagination = () => {
-    const pageNumbers = [];
-    const maxPagesToShow = 3;
-
-    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-
-    startPage = Math.max(1, endPage - maxPagesToShow + 1);
-
-    if (currentPage > 1) {
-      pageNumbers.push(
-        <button
-          key="prev"
-          onClick={() => handlePageChange(currentPage - 1)}
-          className="px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition duration-200"
-        >
-          Précédent
-        </button>
-      );
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pageNumbers.push(
-        <button
-          key={i}
-          onClick={() => handlePageChange(i)}
-          className={`px-4 py-2 rounded-md ${
-            currentPage === i
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          } transition duration-200`}
-        >
-          {i}
-        </button>
-      );
-    }
-
-    if (currentPage < totalPages) {
-      pageNumbers.push(
-        <button
-          key="next"
-          onClick={() => handlePageChange(currentPage + 1)}
-          className="px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 transition duration-200"
-        >
-          Suivant
-        </button>
-      );
-    }
-
-    return <div className="flex space-x-2">{pageNumbers}</div>;
-  };
 
   return (
     <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">

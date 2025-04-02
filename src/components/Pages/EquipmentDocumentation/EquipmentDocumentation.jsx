@@ -143,7 +143,7 @@ const EquipmentDocumentation = () => {
     };
 
     loadAllStatuses();
-  }, []);
+  }, [equipments]);
 
   useEffect(() => {
     if (equipmentId) {
