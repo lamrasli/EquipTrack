@@ -14,6 +14,7 @@ import {
 } from "chart.js";
 import { PiDeskFill } from "react-icons/pi";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
 
 // Register necessary components from Chart.js
 ChartJS.register(
@@ -1999,93 +2000,117 @@ const EquipmentStatistics = ({ equipmentList }) => {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex justify-between items-center mt-4 px-2 py-3 bg-gray-50 sm:px-6">
-              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-700">
-                    Affichage{" "}
-                    <span className="font-medium">{indexOfFirstItem + 1}</span>{" "}
-                    à{" "}
-                    <span className="font-medium">
-                      {Math.min(indexOfLastItem, reformedEquipments.length)}
-                    </span>{" "}
-                    sur{" "}
-                    <span className="font-medium">
-                      {reformedEquipments.length}
-                    </span>{" "}
-                    résultats
-                  </p>
-                </div>
-                <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-                        currentPage === 1
-                          ? "text-gray-300"
-                          : "text-gray-500 hover:bg-gray-50"
-                      }`}
-                    >
-                      <span className="sr-only">Précédent</span>
-                      <svg
-                        className="h-5 w-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
+  <div className="flex justify-between items-center mt-4 px-2 py-3 bg-gray-50 sm:px-6">
+    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+      <div>
+        <p className="text-sm text-gray-700">
+          Affichage{" "}
+          <span className="font-medium">{indexOfFirstItem + 1}</span>{" "}
+          à{" "}
+          <span className="font-medium">
+            {Math.min(indexOfLastItem, reformedEquipments.length)}
+          </span>{" "}
+          sur{" "}
+          <span className="font-medium">
+            {reformedEquipments.length}
+          </span>{" "}
+          résultats
+        </p>
+      </div>
+      <div>
+        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+              currentPage === 1
+                ? "text-gray-300"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <span className="sr-only">Précédent</span>
+            <ChevronLeftIcon className="h-5 w-5" />
+          </button>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <button
-                          key={page}
-                          onClick={() => handlePageChange(page)}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            currentPage === page
-                              ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                              : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      )
-                    )}
+          {/* Première page */}
+          <button
+            onClick={() => handlePageChange(1)}
+            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+              currentPage === 1
+                ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            1
+          </button>
 
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
-                        currentPage === totalPages
-                          ? "text-gray-300"
-                          : "text-gray-500 hover:bg-gray-50"
-                      }`}
-                    >
-                      <span className="sr-only">Suivant</span>
-                      <svg
-                        className="h-5 w-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </div>
+          {/* Afficher ... après la première page si nécessaire */}
+          {currentPage > 3 && (
+            <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+              ...
+            </span>
           )}
+
+          {/* Afficher les pages autour de la page courante */}
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(page => 
+              page === currentPage || 
+              page === currentPage - 1 || 
+              page === currentPage + 1
+            )
+            .filter(page => page > 1 && page < totalPages)
+            .map(page => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                  currentPage === page
+                    ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                    : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+
+          {/* Afficher ... avant la dernière page si nécessaire */}
+          {currentPage < totalPages - 2 && (
+            <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+              ...
+            </span>
+          )}
+
+          {/* Dernière page (si différente de la première) */}
+          {totalPages > 1 && (
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                currentPage === totalPages
+                  ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                  : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              {totalPages}
+            </button>
+          )}
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
+              currentPage === totalPages
+                ? "text-gray-300"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
+          >
+            <span className="sr-only">Suivant</span>
+            <ChevronRightIcon className="h-5 w-5" />
+          </button>
+        </nav>
+      </div>
+    </div>
+  </div>
+)}
         </div>
       </motion.div>
     </div>
