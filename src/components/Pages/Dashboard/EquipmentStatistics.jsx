@@ -196,11 +196,6 @@ const EquipmentStatistics = ({ equipmentList }) => {
     100
   ).toFixed(2);
 
-  // Group equipment by various categories
-  const equipmentByCategory = equipmentList.reduce((acc, equipment) => {
-    acc[equipment.type] = (acc[equipment.type] || 0) + 1;
-    return acc;
-  }, {});
 
 
 
