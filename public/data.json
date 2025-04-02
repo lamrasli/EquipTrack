@@ -1,0 +1,18 @@
+[
+  {
+    "type": "Imprimante",
+    "marque": "HP",
+    "modele": "LaserJet Pro 452",
+    "numero_serie": "ABC123",
+    "bureau": "Bureau 1",
+    "statut": "Fonctionnel"
+  },
+  {
+    "type": "PC Mini",
+    "marque": "Dell",
+    "modele": "XPS 13",
+    "numero_serie": "XYZ456",
+    "bureau": "Bureau 2",
+    "statut": "Réformé"
+  }
+]
