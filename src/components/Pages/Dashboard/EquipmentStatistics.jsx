@@ -14,7 +14,7 @@ import {
 } from "chart.js";
 import { PiDeskFill } from "react-icons/pi";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 
 // Register necessary components from Chart.js
 ChartJS.register(
@@ -197,9 +197,6 @@ const EquipmentStatistics = ({ equipmentList }) => {
     100
   ).toFixed(2);
 
-
-
-
   const equipmentByBrand = equipmentList.reduce((acc, equipment) => {
     acc[equipment.marque] = (acc[equipment.marque] || 0) + 1;
     return acc;
@@ -257,7 +254,6 @@ const EquipmentStatistics = ({ equipmentList }) => {
       },
     ],
   };
-
 
   const doughnutChartData = {
     labels: ["Réformé en bureau", "Réformé en stock", "Fonctionnel"],
@@ -334,14 +330,19 @@ const EquipmentStatistics = ({ equipmentList }) => {
     },
   };
 
-  // Prepare reformed equipment list for table
+  // Préparation des données - tri par date de réforme décroissante
   const reformedEquipments = equipmentList
-    .filter(
-      (equipment) =>
-        equipment.statut === "Réformé en bureau" ||
-        equipment.statut === "Réformé en stock"
-    )
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+    .filter((equipment) => {
+      const statut = equipment.statut
+        ?.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      return statut.includes("reforme");
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.date_reforme || b.date) - new Date(a.date_reforme || a.date)
+    );
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -350,7 +351,6 @@ const EquipmentStatistics = ({ equipmentList }) => {
     indexOfLastItem
   );
   const totalPages = Math.ceil(reformedEquipments.length / itemsPerPage);
-
 
   return (
     <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -1924,6 +1924,7 @@ const EquipmentStatistics = ({ equipmentList }) => {
       </motion.div>
 
       {/* Reformed Equipment Table */}
+
       <motion.div
         variants={fadeInUp}
         initial="hidden"
@@ -1934,183 +1935,174 @@ const EquipmentStatistics = ({ equipmentList }) => {
         <div className="p-6">
           <h3 className="text-xl font-bold text-gray-800 mb-4">
             Liste des Équipements Réformés
+            {reformedEquipments.length > 0 && (
+              <span className="ml-2 text-sm font-normal text-gray-500">
+                ({reformedEquipments.length} équipements, nouveaux en premier)
+              </span>
+            )}
           </h3>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Marque
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Modèle
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Bureau
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentItems.map((equipment, index) => (
-                  <motion.tr
-                    key={equipment.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.05 }}
-                    className={`${
-                      equipment.statut === "Réformé en bureau"
-                        ? "bg-red-50 hover:bg-red-100"
-                        : "bg-amber-50 hover:bg-amber-100"
-                    } transition-colors duration-150`}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {equipment.type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {equipment.marque}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {equipment.modele}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {equipment.bureau}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          equipment.statut === "Réformé en bureau"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {equipment.statut}
-                      </span>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {reformedEquipments.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <ExclamationTriangleIcon className="mx-auto h-8 w-8 text-gray-400" />
+              <p className="mt-2">Aucun équipement réformé trouvé</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Marque
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Modèle
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Bureau
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        N° Série
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Statut
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {currentItems.map((equipment, index) => {
+                      const isNewest = index === 0;
+                      const isReformedInOffice = equipment.statut
+                        ?.toLowerCase()
+                        .includes("bureau");
+                      const reformDate = equipment.date_reforme
+                        ? new Date(equipment.date_reforme)
+                        : null;
 
-          {totalPages > 1 && (
-  <div className="flex justify-between items-center mt-4 px-2 py-3 bg-gray-50 sm:px-6">
-    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-      <div>
-        <p className="text-sm text-gray-700">
-          Affichage{" "}
-          <span className="font-medium">{indexOfFirstItem + 1}</span>{" "}
-          à{" "}
-          <span className="font-medium">
-            {Math.min(indexOfLastItem, reformedEquipments.length)}
-          </span>{" "}
-          sur{" "}
-          <span className="font-medium">
-            {reformedEquipments.length}
-          </span>{" "}
-          résultats
-        </p>
-      </div>
-      <div>
-        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-              currentPage === 1
-                ? "text-gray-300"
-                : "text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            <span className="sr-only">Précédent</span>
-            <ChevronLeftIcon className="h-5 w-5" />
-          </button>
+                      return (
+                        <motion.tr
+                          key={equipment.id || index}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className={`${
+                            isReformedInOffice
+                              ? "bg-red-50 hover:bg-red-100"
+                              : "bg-amber-50 hover:bg-amber-100"
+                          } transition-colors duration-150`}
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {equipment.type || "N/A"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {equipment.marque || "N/A"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {equipment.modele || "N/A"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {equipment.bureau || "Non attribué"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">
+                            {equipment.numero_serie || "NC"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                isReformedInOffice
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-amber-100 text-amber-800"
+                              }`}
+                            >
+                              {equipment.statut || "Statut inconnu"}
+                            </span>
+                          </td>
+                        </motion.tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
-          {/* Première page */}
-          <button
-            onClick={() => handlePageChange(1)}
-            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-              currentPage === 1
-                ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            1
-          </button>
+              {totalPages > 1 && (
+                <div className="flex justify-between items-center mt-4 px-2 py-3 bg-gray-50 sm:px-6">
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        Page <span className="font-medium">{currentPage}</span>{" "}
+                        sur <span className="font-medium">{totalPages}</span> -{" "}
+                        <span className="font-medium">
+                          {reformedEquipments.length}
+                        </span>{" "}
+                        équipements
+                      </p>
+                    </div>
+                    <div>
+                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                        <button
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
+                            currentPage === 1
+                              ? "text-gray-300 cursor-not-allowed"
+                              : "text-gray-500 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span className="sr-only">Précédent</span>
+                          <ChevronLeftIcon className="h-5 w-5" />
+                        </button>
 
-          {/* Afficher ... après la première page si nécessaire */}
-          {currentPage > 3 && (
-            <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-              ...
-            </span>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter(
+                            (page) =>
+                              page === 1 ||
+                              page === totalPages ||
+                              (page >= currentPage - 1 &&
+                                page <= currentPage + 1)
+                          )
+                          .map((page, i, array) => (
+                            <React.Fragment key={page}>
+                              <button
+                                onClick={() => handlePageChange(page)}
+                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                                  currentPage === page
+                                    ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                                    : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                                }`}
+                              >
+                                {page}
+                              </button>
+                              {array[i + 1] && page + 1 < array[i + 1] && (
+                                <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                  ...
+                                </span>
+                              )}
+                            </React.Fragment>
+                          ))}
+
+                        <button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
+                            currentPage === totalPages
+                              ? "text-gray-300 cursor-not-allowed"
+                              : "text-gray-500 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span className="sr-only">Suivant</span>
+                          <ChevronRightIcon className="h-5 w-5" />
+                        </button>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
-
-          {/* Afficher les pages autour de la page courante */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1)
-            .filter(page => 
-              page === currentPage || 
-              page === currentPage - 1 || 
-              page === currentPage + 1
-            )
-            .filter(page => page > 1 && page < totalPages)
-            .map(page => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                  currentPage === page
-                    ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                    : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-
-          {/* Afficher ... avant la dernière page si nécessaire */}
-          {currentPage < totalPages - 2 && (
-            <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-              ...
-            </span>
-          )}
-
-          {/* Dernière page (si différente de la première) */}
-          {totalPages > 1 && (
-            <button
-              onClick={() => handlePageChange(totalPages)}
-              className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                currentPage === totalPages
-                  ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                  : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-              }`}
-            >
-              {totalPages}
-            </button>
-          )}
-
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
-              currentPage === totalPages
-                ? "text-gray-300"
-                : "text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            <span className="sr-only">Suivant</span>
-            <ChevronRightIcon className="h-5 w-5" />
-          </button>
-        </nav>
-      </div>
-    </div>
-  </div>
-)}
         </div>
       </motion.div>
     </div>

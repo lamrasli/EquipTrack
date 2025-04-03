@@ -434,6 +434,9 @@ const Accueil = ({ equipmentList }) => {
                     Modèle
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    N° Série
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Statut
                   </th>
                 </tr>
@@ -455,6 +458,9 @@ const Accueil = ({ equipmentList }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {equipment.modele}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {equipment.numero_serie}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span

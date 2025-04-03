@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "../../../firebase";
 import {
   FaMicrochip,
   FaDesktop,
@@ -12,97 +10,182 @@ import {
   FaFilter,
   FaTimesCircle,
   FaCheckCircle,
+  FaSpinner,
 } from "react-icons/fa";
 import { MdOutlineAdfScanner } from "react-icons/md";
 import { GrServer } from "react-icons/gr";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../../../firebase";
 import equipmentData from "./equipmentData";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const EquipmentDocumentation = () => {
   const { equipmentId } = useParams();
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
-  const [availabilityFilter, setAvailabilityFilter] = useState("all"); // Nouvel état
+  const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [selectedEquipment, setSelectedEquipment] = useState(null);
-  const [equipments, setEquipments] = useState(
-    equipmentData.map((item) => ({
-      ...item,
-      specs: {
-        ...item.specs,
-        statut: item.specs.statut || "Disponible",
-      },
-    }))
-  );
+  const [equipments, setEquipments] = useState([]);
+  const [availability, setAvailability] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [updatingIds, setUpdatingIds] = useState(new Set());
 
-  // Fonction pour charger le statut depuis Firebase - CORRIGÉE
-  const loadEquipmentStatus = async (equipmentId) => {
-    try {
-      // Assurez-vous que equipmentId est une chaîne de caractères
-      const idString = String(equipmentId);
-      const docRef = doc(db, "equipments", idString);
-      const docSnap = await getDoc(docRef);
+  // Charger les disponibilités depuis Firestore
+  useEffect(() => {
+    const loadAvailability = async () => {
+      const availabilityMap = {};
+      try {
+        for (const equipment of equipmentData) {
+          if (
+            typeof equipment.id !== "string" &&
+            typeof equipment.id !== "number"
+          ) {
+            console.error("Invalid equipment ID:", equipment.id);
+            continue;
+          }
 
-      if (docSnap.exists()) {
-        return docSnap.data().statut || "Disponible"; // Retourne "Disponible" par défaut si non défini
+          const docRef = doc(
+            db,
+            "equipmentAvailability",
+            equipment.id.toString()
+          );
+          const docSnap = await getDoc(docRef);
+          availabilityMap[equipment.id] = docSnap.exists()
+            ? docSnap.data().available
+            : true;
+        }
+        setAvailability(availabilityMap);
+      } catch (error) {
+        console.error("Error loading availability:", error);
+        const defaultAvailability = {};
+        equipmentData.forEach((equipment) => {
+          defaultAvailability[equipment.id] = true;
+        });
+        setAvailability(defaultAvailability);
+        toast.error("Erreur de chargement des disponibilités");
+      } finally {
+        setLoading(false);
       }
-      return "Disponible"; // Retourne "Disponible" par défaut si le document n'existe pas
-    } catch (error) {
-      console.error("Erreur lors du chargement du statut:", error);
-      return "Disponible"; // Retourne "Disponible" en cas d'erreur
-    }
-  };
+    };
 
-  // Fonction pour sauvegarder le statut dans Firebase - CORRIGÉE
-  const saveEquipmentStatus = async (equipmentId, statut) => {
-    try {
-      // Assurez-vous que equipmentId est une chaîne de caractères
-      const idString = String(equipmentId);
-      await setDoc(doc(db, "equipments", idString), {
-        statut,
-        lastUpdated: serverTimestamp(),
-      });
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde du statut:", error);
+    loadAvailability();
+  }, []);
+
+  // Initialiser les équipements avec disponibilité
+  useEffect(() => {
+    if (!loading) {
+      setEquipments(
+        equipmentData.map((item) => ({
+          ...item,
+          specs: {
+            ...item.specs,
+            statut: availability[item.id] ? "Disponible" : "Indisponible",
+          },
+        }))
+      );
     }
-  };
-  // Fonction pour basculer le statut
+  }, [loading, availability]);
+
+  // Basculer la disponibilité
   const toggleAvailability = async (equipmentId, e) => {
     if (e) e.stopPropagation();
 
-    setEquipments((prevEquipments) =>
-      prevEquipments.map((item) => {
-        if (item.id === equipmentId) {
-          const newStatut =
-            item.specs.statut === "Disponible" ? "Indisponible" : "Disponible";
+    if (updatingIds.has(equipmentId)) return;
 
-          // Sauvegarder le nouveau statut dans Firebase
-          saveEquipmentStatus(equipmentId, newStatut);
+    try {
+      setUpdatingIds((prev) => new Set(prev).add(equipmentId));
+      const newAvailability = !availability[equipmentId];
 
-          return {
-            ...item,
-            specs: {
-              ...item.specs,
-              statut: newStatut,
-            },
-          };
-        }
-        return item;
-      })
+      await setDoc(
+        doc(db, "equipmentAvailability", equipmentId.toString()),
+        {
+          equipmentId: equipmentId.toString(),
+          available: newAvailability,
+          lastUpdated: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      setAvailability((prev) => ({
+        ...prev,
+        [equipmentId]: newAvailability,
+      }));
+
+      toast.success(
+        `Équipement marqué comme ${
+          newAvailability ? "disponible" : "indisponible"
+        }`,
+        { autoClose: 2000 }
+      );
+    } catch (error) {
+      console.error("Update error:", error);
+      toast.error(`Erreur: ${error.message}`);
+    } finally {
+      setUpdatingIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(equipmentId);
+        return newSet;
+      });
+    }
+  };
+
+  // Composant Switch amélioré
+  const AvailabilitySwitch = ({ equipment }) => {
+    const isAvailable = availability[equipment.id] ?? true;
+    const isUpdating = updatingIds.has(equipment.id);
+
+    return (
+      <div className="flex items-center">
+        <button
+          type="button"
+          className={`${
+            isAvailable ? "bg-green-500" : "bg-red-500"
+          } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+            isUpdating ? "opacity-70 cursor-not-allowed" : ""
+          }`}
+          onClick={(e) => toggleAvailability(equipment.id, e)}
+          disabled={isUpdating}
+        >
+          {isUpdating ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <FaSpinner className="animate-spin text-white text-xs" />
+            </div>
+          ) : (
+            <span
+              className={`${
+                isAvailable ? "translate-x-1" : "translate-x-6"
+              } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+            />
+          )}
+        </button>
+        <span
+          className={`ml-2 text-sm font-medium ${
+            isAvailable ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          {isAvailable ? "Disponible" : "Indisponible"}
+        </span>
+      </div>
     );
   };
+
+  // Filtrage des équipements
   const filteredEquipment = equipments.filter((item) => {
     const matchesCategory = selectedCategory
       ? item.category === selectedCategory
       : true;
     const matchesBrand = selectedBrand ? item.brand === selectedBrand : true;
-    // Filtre par disponibilité
     const matchesAvailability =
       availabilityFilter === "all"
         ? true
         : availabilityFilter === "available"
-        ? item.specs.statut === "Disponible"
-        : item.specs.statut === "Indisponible";
+        ? availability[item.id]
+        : !availability[item.id];
 
     return matchesCategory && matchesBrand && matchesAvailability;
   });
+
   const handleEquipmentClick = (equipment) => {
     setSelectedEquipment(equipment);
   };
@@ -124,63 +207,13 @@ const EquipmentDocumentation = () => {
     "Switch KVM": <FaNetworkWired className="text-indigo-500 text-xl" />,
   };
 
-  // Charger les statuts depuis Firebase au montage du composant
-  useEffect(() => {
-    const loadAllStatuses = async () => {
-      const updatedEquipments = await Promise.all(
-        equipments.map(async (equipment) => {
-          const firebaseStatus = await loadEquipmentStatus(equipment.id);
-          return {
-            ...equipment,
-            specs: {
-              ...equipment.specs,
-              statut: firebaseStatus || equipment.specs.statut,
-            },
-          };
-        })
-      );
-      setEquipments(updatedEquipments);
-    };
-
-    loadAllStatuses();
-  }, [equipments]);
-
-  useEffect(() => {
-    if (equipmentId) {
-      const equipment = equipments.find((item) => item.id === equipmentId);
-      setSelectedEquipment(equipment);
-    }
-  }, [equipmentId, equipments]);
-
-  // Composant Switch
-  const AvailabilitySwitch = ({ equipment }) => {
-    const isAvailable = equipment.specs.statut === "Disponible";
-
+  if (loading) {
     return (
-      <div className="flex items-center">
-        <button
-          type="button"
-          className={`${
-            isAvailable ? "bg-green-500" : "bg-red-500"
-          } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
-          onClick={(e) => toggleAvailability(equipment.id, e)}
-        >
-          <span
-            className={`${
-              isAvailable ? "translate-x-1" : "translate-x-6"
-            } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-          />
-        </button>
-        <span
-          className={`ml-2 text-sm font-medium ${
-            isAvailable ? "text-green-600" : "text-red-600"
-          }`}
-        >
-          {equipment.specs.statut}
-        </span>
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
-  };
+  }
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -201,7 +234,7 @@ const EquipmentDocumentation = () => {
               </h3>
 
               <div className="space-y-4">
-                {/* Filtre par catégorie */}
+                {/* Filtre Catégorie */}
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 mb-2">
                     Catégorie
@@ -235,7 +268,7 @@ const EquipmentDocumentation = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Filtre par marque */}
+                  {/* Filtre Marque */}
                   <div>
                     <label
                       htmlFor="brand-filter"
@@ -273,7 +306,7 @@ const EquipmentDocumentation = () => {
                     </div>
                   </div>
 
-                  {/* Filtre par disponibilité */}
+                  {/* Filtre Disponibilité */}
                   <div>
                     <label
                       htmlFor="status-filter"
@@ -298,137 +331,146 @@ const EquipmentDocumentation = () => {
                     </div>
                   </div>
                 </div>
-
-                {/* Bouton réinitialiser (optionnel) */}
-                {(selectedCategory ||
-                  selectedBrand ||
-                  availabilityFilter !== "all") && (
-                  <div className="pt-2">
-                    <button
-                      onClick={() => {
-                        setSelectedCategory("");
-                        setSelectedBrand("");
-                        setAvailabilityFilter("all");
-                      }}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                      </svg>
-                      Réinitialiser les filtres
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
 
             {/* Liste des équipements */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredEquipment.map((equipment) => (
-                <div
-                  key={equipment.id}
-                  onClick={() => handleEquipmentClick(equipment)}
-                  className="group bg-white rounded-xl shadow-md overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative"
-                >
-                  {/* Indicateur d'indisponibilité */}
-                  {equipment.specs.statut === "Indisponible" && (
-                    <>
-                      <div className="absolute inset-0 bg-black/20 z-0"></div>
-                    </>
-                  )}
+              {filteredEquipment.map((equipment) => {
+                const isAvailable = availability[equipment.id] ?? true;
+                return (
+                  <div
+                    key={equipment.id}
+                    onClick={() => handleEquipmentClick(equipment)}
+                    className="relative bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] group border border-gray-100"
+                    style={{
+                      boxShadow: "0 5px 20px rgba(0, 0, 0, 0.08)",
+                    }}
+                  >
+                    {/* Conteneur image */}
+                    <div className="relative h-48 overflow-hidden">
+                      {/* Image avec effet */}
+                      <img
+                        src={equipment.image}
+                        alt={equipment.model}
+                        className={`w-full h-full object-cover transition-all duration-500 group-hover:brightness-110 ${
+                          !isAvailable
+                            ? "grayscale-[30%] contrast-90 brightness-90"
+                            : ""
+                        }`}
+                      />
 
-                  <div className="relative h-48 overflow-hidden">
-                    <img
-                      src={equipment.image}
-                      alt={equipment.model}
-                      className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
-                        equipment.specs.statut === "Indisponible"
-                          ? "opacity-70"
-                          : ""
-                      }`}
-                    />
+                      {/* Grande croix rouge pour indisponible - Position centrale */}
+                      {!isAvailable && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="relative w-16 h-16">
+                            {/* Croix rouge épaisse avec ombre */}
+                            <div
+                              className="absolute w-full h-2 bg-red-600 rounded-full transform rotate-45 shadow-md"
+                              style={{
+                                top: "50%",
+                                marginTop: "-1px",
+                                filter:
+                                  "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                              }}
+                            ></div>
+                            <div
+                              className="absolute w-full h-2 bg-red-600 rounded-full transform -rotate-45 shadow-md"
+                              style={{
+                                top: "50%",
+                                marginTop: "-1px",
+                                filter:
+                                  "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
 
-                    {/* Barres rouges diagonales */}
-                    {equipment.specs.statut === "Indisponible" && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="absolute w-full h-1.5 bg-red-600 transform rotate-45 origin-center opacity-90"></div>
-                        <div className="absolute w-full h-1.5 bg-red-600 transform -rotate-45 origin-center opacity-90"></div>
-                      </div>
-                    )}
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                      <div>
-                        <span className="inline-block px-2 py-1 bg-blue-600 text-white text-xs font-semibold rounded-md mb-1">
-                          {equipment.category}
-                        </span>
-                        <h2 className="text-white font-bold text-lg">
-                          {equipment.brand} {equipment.model}
-                        </h2>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <div className="flex justify-between items-center">
-                      <span
-                        className={`font-medium ${
-                          equipment.specs.statut === "Indisponible"
-                            ? "text-red-600"
-                            : "text-green-600"
+                      {/* Bandeau de catégorie */}
+                      <div
+                        className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-bold ${
+                          isAvailable
+                            ? "bg-blue-500 text-white"
+                            : "bg-red-600 text-white"
                         }`}
                       >
-                        {equipment.specs.statut === "Indisponible" ? (
-                          <FaTimesCircle className="inline mr-1" />
-                        ) : (
-                          <FaCheckCircle className="inline mr-1" />
-                        )}
-                        {equipment.specs.statut}
-                      </span>
+                        {equipment.category}
+                      </div>
                     </div>
-                    <div className="mt-3 flex justify-between items-center">
-                      <AvailabilitySwitch equipment={equipment} />
-                      <button
-                        className="px-3 py-1 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEquipmentClick(equipment);
-                        }}
+
+                    {/* Contenu texte */}
+                    <div className="p-5">
+                      <h3 className="text-lg font-bold text-gray-800 mb-1">
+                        {equipment.brand} {equipment.model}
+                      </h3>
+
+                      {/* Statut avec icône */}
+                      <div
+                        className={`flex items-center text-sm mb-4 ${
+                          isAvailable ? "text-green-600" : "text-red-600"
+                        }`}
                       >
-                        Détails
-                      </button>
+                        {isAvailable ? (
+                          <FaCheckCircle className="mr-2" />
+                        ) : (
+                          <FaTimesCircle className="mr-2" />
+                        )}
+                        {isAvailable ? "Disponible" : "Indisponible"}
+                      </div>
+
+                      {/* Boutons d'action */}
+                      <div className="flex justify-between items-center">
+                        <AvailabilitySwitch equipment={equipment} />
+
+                        <button
+                          className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium flex items-center transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEquipmentClick(equipment);
+                          }}
+                        >
+                          Détails
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 ml-1"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         ) : (
-          /* Fiche technique améliorée */
+          /* Fiche technique détaillée */
           <div className="bg-white rounded-xl shadow-lg overflow-hidden max-w-6xl mx-auto">
             <div className="relative">
-              {/* Image en bannière */}
+              {/* Banner Image */}
               <div className="h-64 w-full bg-gradient-to-r from-blue-500 to-blue-600 overflow-hidden relative">
                 <img
                   src={selectedEquipment.image}
                   alt={selectedEquipment.model}
                   className={`w-full h-full object-cover ${
-                    selectedEquipment.specs.statut === "Indisponible"
+                    !availability[selectedEquipment.id]
                       ? "opacity-50"
                       : "opacity-70"
                   }`}
                 />
 
-                {/* Barres rouges diagonales pour indisponible */}
-                {selectedEquipment.specs.statut === "Indisponible" && (
+                {/* Red diagonal bars for unavailable */}
+                {!availability[selectedEquipment.id] && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="absolute w-full h-2 bg-red-600 transform rotate-45 origin-center opacity-90"></div>
                     <div className="absolute w-full h-2 bg-red-600 transform -rotate-45 origin-center opacity-90"></div>
@@ -436,7 +478,7 @@ const EquipmentDocumentation = () => {
                 )}
               </div>
 
-              {/* Bouton retour */}
+              {/* Back Button */}
               <button
                 onClick={handleBackToList}
                 className="absolute top-4 left-4 px-4 py-2 bg-white/90 text-gray-800 rounded-lg hover:bg-white transition-all duration-200 ease-in-out flex items-center gap-2 shadow-md"
@@ -445,7 +487,7 @@ const EquipmentDocumentation = () => {
                 Retour
               </button>
 
-              {/* En-tête de la fiche */}
+              {/* Sheet Header */}
               <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
                 <div className="flex items-center gap-3">
                   {categoryIcons[selectedEquipment.category]}
@@ -459,8 +501,8 @@ const EquipmentDocumentation = () => {
               </div>
             </div>
 
-            {/* Alerte d'indisponibilité */}
-            {selectedEquipment.specs.statut === "Indisponible" && (
+            {/* Indisponible Alert */}
+            {!availability[selectedEquipment.id] && (
               <div className="bg-red-50 border-l-4 border-red-600 p-4">
                 <div className="flex items-start">
                   <div className="flex-shrink-0 mt-0.5">
@@ -470,20 +512,13 @@ const EquipmentDocumentation = () => {
                     <h3 className="text-sm font-medium text-red-800">
                       Cet équipement est actuellement indisponible
                     </h3>
-                    <div className="mt-2 text-sm text-red-700">
-                      <p>
-                        Date prévisionnelle de disponibilité:{" "}
-                        {selectedEquipment.specs.disponibilite ||
-                          "Non spécifiée"}
-                      </p>
-                    </div>
                   </div>
                 </div>
               </div>
             )}
 
             <div className="p-6 md:p-8">
-              {/* Spécifications principales */}
+              {/* Main Specifications */}
               <div className="mb-8">
                 <h3 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
                   Spécifications Techniques
@@ -507,7 +542,7 @@ const EquipmentDocumentation = () => {
                 </div>
               </div>
 
-              {/* Fiche Technique complète */}
+              {/* Full Technical Sheet */}
               <div>
                 <h3 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
                   Fiche Technique Complète
@@ -539,28 +574,34 @@ const EquipmentDocumentation = () => {
                 </div>
               </div>
 
-              {/* Section supplémentaire pour les documents */}
-              {selectedEquipment.documents && (
-                <div className="mt-8">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
-                    Documents Associés
-                  </h3>
-                  <div className="flex flex-wrap gap-3">
-                    {selectedEquipment.documents.map((doc, index) => (
-                      <a
-                        key={index}
-                        href={doc.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center gap-2 text-blue-600 font-medium"
+              {/* Status Toggle */}
+              <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  Gestion de disponibilité
+                </h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-600">
+                      Statut actuel:{" "}
+                      <span
+                        className={`font-medium ${
+                          availability[selectedEquipment.id]
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
                       >
-                        <span>{doc.type}</span>
-                        <span className="text-xs text-gray-500">(PDF)</span>
-                      </a>
-                    ))}
+                        {availability[selectedEquipment.id]
+                          ? "Disponible"
+                          : "Indisponible"}
+                      </span>
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Cliquez sur le switch pour changer le statut
+                    </p>
                   </div>
+                  <AvailabilitySwitch equipment={selectedEquipment} />
                 </div>
-              )}
+              </div>
             </div>
           </div>
         )}

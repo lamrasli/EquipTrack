@@ -61,21 +61,121 @@ const EquipmentTable = ({ equipmentList = [], onEdit, onDelete }) => {
   }, []);
 
   const exportToExcel = () => {
+    // 1. Préparer les données avec formatage français
     const data = equipmentList.map((equipment) => ({
-      Directions: equipment.direction,
+      Direction: equipment.direction,
       Type: equipment.type,
       Marque: equipment.marque,
       Modèle: equipment.modele,
-      "Numéro de Série": equipment.numero_serie,
+      "N° Série": equipment.numero_serie,
       Bureau: equipment.bureau,
       Statut: equipment.statut,
-      Date: new Date(equipment.date).toLocaleDateString(),
+      Date: new Date(equipment.date).toLocaleDateString("fr-FR"),
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Équipements");
-    XLSX.writeFile(workbook, "equipements.xlsx");
+    // 2. Créer la feuille Excel
+    const ws = XLSX.utils.json_to_sheet(data);
+
+    // 3. Définir les styles professionnels
+    const headerStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
+      fill: { fgColor: { rgb: "4472C4" } }, // Bleu corporate
+      alignment: { horizontal: "center", vertical: "center" },
+      border: {
+        top: { style: "thin", color: { rgb: "000000" } },
+        bottom: { style: "thin", color: { rgb: "000000" } },
+      },
+    };
+
+    // Styles conditionnels pour les statuts
+    const statusStyles = {
+      Fonctionnel: {
+        fill: { fgColor: { rgb: "C6EFCE" } },
+        font: { color: { rgb: "006100" } },
+      },
+      "Réformé en bureau": {
+        fill: { fgColor: { rgb: "FFC7CE" } },
+        font: { color: { rgb: "9C0006" } },
+      },
+      "Réformé en stock": {
+        fill: { fgColor: { rgb: "FFEB9C" } },
+        font: { color: { rgb: "9C6500" } },
+      },
+    };
+
+    // 4. Appliquer les styles
+    // a. En-têtes
+    const range = XLSX.utils.decode_range(ws["!ref"]);
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const headerCell = XLSX.utils.encode_cell({ r: 0, c: C });
+      ws[headerCell].s = headerStyle;
+    }
+
+    // b. Données
+    for (let R = 1; R <= range.e.r; ++R) {
+      const statusCell = XLSX.utils.encode_cell({ r: R, c: 6 }); // Colonne Statut (G)
+      if (ws[statusCell] && statusStyles[ws[statusCell].v]) {
+        ws[statusCell].s = statusStyles[ws[statusCell].v];
+      }
+
+      // Style de base pour toutes les cellules
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell = XLSX.utils.encode_cell({ r: R, c: C });
+        ws[cell].s = {
+          alignment: { vertical: "center" },
+          border: {
+            left: { style: "thin", color: { rgb: "D9D9D9" } },
+            right: { style: "thin", color: { rgb: "D9D9D9" } },
+          },
+        };
+      }
+    }
+
+    // 5. Largeurs de colonnes
+    ws["!cols"] = [
+      { wch: 20 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 12 },
+    ];
+
+    // 6. Ajouter un titre
+    XLSX.utils.sheet_add_aoa(
+      ws,
+      [
+        ["Inventaire des Équipements Informatiques"],
+        ["Export du " + new Date().toLocaleDateString("fr-FR")],
+        [""], // Ligne vide
+      ],
+      { origin: "A1" }
+    );
+
+    // 7. Fusionner le titre
+    ws["!merges"] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } },
+    ];
+
+    // Style du titre
+    const titleCell = ws["A1"];
+    titleCell.s = {
+      font: { bold: true, sz: 16, color: { rgb: "2F5597" } },
+      alignment: { horizontal: "center" },
+    };
+
+    // 8. Créer le workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Équipements");
+
+    // 9. Exporter avec nom de fichier daté
+    XLSX.writeFile(
+      wb,
+      `Inventaire_Equipements_${new Date().toISOString().slice(0, 10)}.xlsx`
+    );
   };
 
   const handleFilterChange = (e) => {
@@ -161,8 +261,12 @@ const EquipmentTable = ({ equipmentList = [], onEdit, onDelete }) => {
       (filters.marque === "" || equipment.marque === filters.marque) &&
       (filters.modele === "" || equipment.modele === filters.modele) &&
       (filters.numero_serie === "" ||
-        equipment.numero_serie.includes(filters.numero_serie)) &&
-      (filters.bureau === "" || equipment.bureau.includes(filters.bureau)) &&
+        (equipment.numero_serie &&
+          String(equipment.numero_serie)
+            .toUpperCase()
+            .includes(filters.numero_serie.toUpperCase()))) &&
+      (filters.bureau === "" ||
+        (equipment.bureau && equipment.bureau.includes(filters.bureau))) &&
       (filters.direction === "" || equipment.direction === filters.direction) &&
       matchesDate &&
       matchesDateRange
@@ -296,9 +400,16 @@ const EquipmentTable = ({ equipmentList = [], onEdit, onDelete }) => {
 
     return buttons;
   };
-
   const handleEditClick = useCallback(
     (equipment) => () => {
+      // Scroll vers le haut avec un léger délai
+      setTimeout(() => {
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      }, 100);
+
       onEdit(equipment);
     },
     [onEdit]
