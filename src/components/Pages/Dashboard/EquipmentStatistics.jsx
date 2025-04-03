@@ -1943,10 +1943,7 @@ const EquipmentStatistics = ({ equipmentList }) => {
           </h3>
 
           {reformedEquipments.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <ExclamationTriangleIcon className="mx-auto h-8 w-8 text-gray-400" />
-              <p className="mt-2">Aucun équipement réformé trouvé</p>
-            </div>
+            <div className="text-center py-8 text-gray-500"></div>
           ) : (
             <>
               <div className="overflow-x-auto">
