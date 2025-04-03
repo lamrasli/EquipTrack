@@ -1972,13 +1972,9 @@ const EquipmentStatistics = ({ equipmentList }) => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {currentItems.map((equipment, index) => {
-                      const isNewest = index === 0;
                       const isReformedInOffice = equipment.statut
                         ?.toLowerCase()
                         .includes("bureau");
-                      const reformDate = equipment.date_reforme
-                        ? new Date(equipment.date_reforme)
-                        : null;
 
                       return (
                         <motion.tr

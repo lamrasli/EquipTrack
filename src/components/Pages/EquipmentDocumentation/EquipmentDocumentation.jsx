@@ -21,7 +21,6 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const EquipmentDocumentation = () => {
-  const { equipmentId } = useParams();
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
