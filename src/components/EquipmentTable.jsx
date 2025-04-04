@@ -248,6 +248,10 @@ const EquipmentTable = ({ equipmentList = [], onEdit, onDelete, user }) => {
         case "Réformé en stock":
           statusCell.font.color = { argb: colors.stockReform };
           break;
+        default:
+          // Cas par défaut - conserver la couleur normale
+          statusCell.font.color = { argb: "FF333333" }; // Gris foncé par défaut
+          break;
       }
     });
 
