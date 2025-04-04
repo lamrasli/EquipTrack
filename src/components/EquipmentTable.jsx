@@ -12,7 +12,7 @@ import {
 } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
 import { equipmentModels, directions } from "./EquipmentForm";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { getHistoryBySerialNumber } from "../historyService";
@@ -80,122 +80,246 @@ const EquipmentTable = ({ equipmentList = [], onEdit, onDelete, user }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showOffcanvas, historySearch]);
 
-  const exportToExcel = () => {
-    // 1. Préparer les données avec formatage français
-    const data = equipmentList.map((equipment) => ({
-      Direction: equipment.direction,
-      Type: equipment.type,
-      Marque: equipment.marque,
-      Modèle: equipment.modele,
-      "N° Série": equipment.numero_serie,
-      Bureau: equipment.bureau,
-      Statut: equipment.statut,
-      Date: new Date(equipment.date).toLocaleDateString("fr-FR"),
-    }));
+  const exportToExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "Système d'inventaire";
+    workbook.created = new Date();
 
-    // 2. Créer la feuille Excel
-    const ws = XLSX.utils.json_to_sheet(data);
+    const worksheet = workbook.addWorksheet("Équipements");
 
-    // 3. Définir les styles professionnels
-    const headerStyle = {
-      font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
-      fill: { fgColor: { rgb: "4472C4" } }, // Bleu corporate
-      alignment: { horizontal: "center", vertical: "center" },
-      border: {
-        top: { style: "thin", color: { rgb: "000000" } },
-        bottom: { style: "thin", color: { rgb: "000000" } },
-      },
+    // Palette de couleurs
+    const colors = {
+      headerBg: "FF2F5597",
+      headerText: "FFFFFFFF",
+      titleBg: "FF5B9BD5",
+      titleText: "FFFFFFFF",
+      evenRow: "FFF5F5F5",
+      oddRow: "FFFFFFFF",
+      border: "FFD9D9D9",
+      functional: "FF70AD47",
+      officeReform: "FFFF0000",
+      stockReform: "FFFFC000",
     };
 
-    // Styles conditionnels pour les statuts
-    const statusStyles = {
-      Fonctionnel: {
-        fill: { fgColor: { rgb: "C6EFCE" } },
-        font: { color: { rgb: "006100" } },
-      },
-      "Réformé en bureau": {
-        fill: { fgColor: { rgb: "FFC7CE" } },
-        font: { color: { rgb: "9C0006" } },
-      },
-      "Réformé en stock": {
-        fill: { fgColor: { rgb: "FFEB9C" } },
-        font: { color: { rgb: "9C6500" } },
-      },
+    // 1. Titre principal (couleur limitée à A1:H1)
+    const titleCell = worksheet.getCell("A1");
+    titleCell.value = "Inventaire des Équipements Informatiques";
+    titleCell.font = {
+      name: "Arial",
+      size: 16,
+      bold: true,
+      color: { argb: colors.titleText },
     };
+    titleCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: colors.titleBg },
+    };
+    titleCell.alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+    worksheet.mergeCells("A1:H1");
 
-    // 4. Appliquer les styles
-    // a. En-têtes
-    const range = XLSX.utils.decode_range(ws["!ref"]);
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      const headerCell = XLSX.utils.encode_cell({ r: 0, c: C });
-      ws[headerCell].s = headerStyle;
+    // Réinitialiser le style après H1
+    for (let col = 9; col <= 16384; col++) {
+      worksheet.getRow(1).getCell(col).fill = {
+        type: "pattern",
+        pattern: "none",
+      };
     }
 
-    // b. Données
-    for (let R = 1; R <= range.e.r; ++R) {
-      const statusCell = XLSX.utils.encode_cell({ r: R, c: 6 }); // Colonne Statut (G)
-      if (ws[statusCell] && statusStyles[ws[statusCell].v]) {
-        ws[statusCell].s = statusStyles[ws[statusCell].v];
+    // 2. Sous-titre avec date
+    const subtitleCell = worksheet.getCell("A2");
+    subtitleCell.value = `Export généré le ${new Date().toLocaleDateString(
+      "fr-FR",
+      {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       }
+    )}`;
+    subtitleCell.font = {
+      name: "Arial",
+      size: 11,
+      italic: true,
+      color: { argb: "FF555555" },
+    };
+    subtitleCell.alignment = { horizontal: "center" };
+    worksheet.mergeCells("A2:H2");
 
-      // Style de base pour toutes les cellules
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cell = XLSX.utils.encode_cell({ r: R, c: C });
-        ws[cell].s = {
-          alignment: { vertical: "center" },
-          border: {
-            left: { style: "thin", color: { rgb: "D9D9D9" } },
-            right: { style: "thin", color: { rgb: "D9D9D9" } },
-          },
+    // Réinitialiser le style après H2
+    for (let col = 9; col <= 16384; col++) {
+      worksheet.getRow(2).getCell(col).fill = {
+        type: "pattern",
+        pattern: "none",
+      };
+    }
+
+    // 3. Ligne vide avant en-têtes
+    worksheet.addRow([]);
+
+    // 4. En-têtes de colonnes
+    const headers = [
+      { name: "Direction", width: 22 },
+      { name: "Type", width: 18 },
+      { name: "Marque", width: 18 },
+      { name: "Modèle", width: 20 },
+      { name: "N° Série", width: 16 },
+      { name: "Bureau", width: 18 },
+      { name: "Statut", width: 20 },
+      { name: "Date", width: 14 },
+    ];
+
+    const headerRow = worksheet.addRow(headers.map((h) => h.name));
+    headerRow.eachCell((cell) => {
+      cell.font = {
+        name: "Calibri",
+        size: 12,
+        bold: true,
+        color: { argb: colors.headerText },
+      };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: colors.headerBg },
+      };
+      cell.border = {
+        top: { style: "thin", color: { argb: colors.border } },
+        bottom: { style: "medium", color: { argb: colors.headerBg } },
+        left: { style: "thin", color: { argb: colors.border } },
+        right: { style: "thin", color: { argb: colors.border } },
+      };
+      cell.alignment = {
+        vertical: "middle",
+        horizontal: "center",
+        wrapText: true,
+      };
+    });
+
+    // Définir largeurs colonnes
+    headers.forEach((header, index) => {
+      worksheet.getColumn(index + 1).width = header.width;
+    });
+
+    // 5. Données avec style alterné
+    equipmentList.forEach((equipment, index) => {
+      const row = worksheet.addRow([
+        equipment.direction,
+        equipment.type,
+        equipment.marque,
+        equipment.modele,
+        equipment.numero_serie,
+        equipment.bureau,
+        equipment.statut,
+        new Date(equipment.date).toLocaleDateString("fr-FR"),
+      ]);
+
+      row.eachCell((cell) => {
+        cell.font = {
+          name: "Calibri",
+          size: 11,
+          color: { argb: "FF333333" },
         };
+        cell.border = {
+          top: { style: "thin", color: { argb: colors.border } },
+          bottom: { style: "thin", color: { argb: colors.border } },
+          left: { style: "thin", color: { argb: colors.border } },
+          right: { style: "thin", color: { argb: colors.border } },
+        };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: index % 2 === 0 ? colors.evenRow : colors.oddRow },
+        };
+      });
+
+      const statusCell = row.getCell(7);
+      switch (equipment.statut) {
+        case "Fonctionnel":
+          statusCell.font.color = { argb: colors.functional };
+          break;
+        case "Réformé en bureau":
+          statusCell.font.color = { argb: colors.officeReform };
+          break;
+        case "Réformé en stock":
+          statusCell.font.color = { argb: colors.stockReform };
+          break;
       }
-    }
+    });
 
-    // 5. Largeurs de colonnes
-    ws["!cols"] = [
-      { wch: 20 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 15 },
-      { wch: 12 },
-    ];
-
-    // 6. Ajouter un titre
-    XLSX.utils.sheet_add_aoa(
-      ws,
-      [
-        ["Inventaire des Équipements Informatiques"],
-        ["Export du " + new Date().toLocaleDateString("fr-FR")],
-        [""], // Ligne vide
-      ],
-      { origin: "A1" }
-    );
-
-    // 7. Fusionner le titre
-    ws["!merges"] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
-      { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } },
-    ];
-
-    // Style du titre
-    const titleCell = ws["A1"];
-    titleCell.s = {
-      font: { bold: true, sz: 16, color: { rgb: "2F5597" } },
-      alignment: { horizontal: "center" },
+    // 6. Statistiques
+    const stats = {
+      "Total équipements": filteredEquipmentList.length,
+      Fonctionnels: filteredEquipmentList.filter(
+        (e) => e.statut === "Fonctionnel"
+      ).length,
+      "Réformés (bureau)": filteredEquipmentList.filter(
+        (e) => e.statut === "Réformé en bureau"
+      ).length,
+      "Réformés (stock)": filteredEquipmentList.filter(
+        (e) => e.statut === "Réformé en stock"
+      ).length,
     };
 
-    // 8. Créer le workbook
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Équipements");
+    worksheet.addRow([]);
 
-    // 9. Exporter avec nom de fichier daté
-    XLSX.writeFile(
-      wb,
-      `Inventaire_Equipements_${new Date().toISOString().slice(0, 10)}.xlsx`
-    );
+    // Titre des statistiques (couleur limitée à A:H)
+    const statsTitleCell = worksheet.getCell(`A${worksheet.rowCount + 1}`);
+    statsTitleCell.value = "Statistiques";
+    statsTitleCell.font = {
+      name: "Calibri",
+      size: 12,
+      bold: true,
+      color: { argb: colors.headerText },
+    };
+    statsTitleCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: colors.headerBg },
+    };
+    statsTitleCell.alignment = {
+      vertical: "middle",
+      horizontal: "center",
+    };
+    worksheet.mergeCells(`A${statsTitleCell.row}:H${statsTitleCell.row}`);
+
+    // Réinitialiser le style après H
+    for (let col = 9; col <= 16384; col++) {
+      worksheet.getRow(statsTitleCell.row).getCell(col).fill = {
+        type: "pattern",
+        pattern: "none",
+      };
+    }
+
+    // Données statistiques
+    Object.entries(stats).forEach(([label, value]) => {
+      const row = worksheet.addRow([label, value]);
+      row.getCell(1).font = { bold: true };
+      row.getCell(2).font = {
+        bold: true,
+        color: { argb: colors.titleBg },
+      };
+    });
+
+    // 7. Génération du fichier
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Inventaire_Equipements_${new Date()
+      .toISOString()
+      .slice(0, 10)}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleFilterChange = (e) => {
