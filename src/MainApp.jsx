@@ -27,6 +27,7 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { Timestamp } from "firebase/firestore";
+import { addHistoryRecord } from "./historyService";
 
 function MainApp() {
   const [equipmentList, setEquipmentList] = useState([]);
@@ -92,6 +93,9 @@ function MainApp() {
     if (confirmDelete) {
       try {
         const equipmentToDelete = equipmentList.find((e) => e.id === id);
+        // Ajouter à l'historique avant suppression
+        await addHistoryRecord(equipmentToDelete, "delete", user?.email);
+
         await deleteDoc(doc(db, "equipments", id));
 
         setEquipmentList((prev) =>
@@ -251,6 +255,12 @@ function MainApp() {
         dateAdded: serverTimestamp(),
         date: new Date(newEquipment.date),
       });
+      // Ajouter à l'historique
+      await addHistoryRecord(
+        { ...newEquipment, id: docRef.id },
+        "add",
+        user?.email
+      );
 
       const newDoc = await getDocs(collection(db, "equipments"));
       const newEquipmentData = newDoc.docs.map((doc) => ({
@@ -373,6 +383,8 @@ function MainApp() {
       delete updatedData.dateAdded;
 
       await updateDoc(equipmentRef, updatedData);
+      // Ajouter à l'historique
+      await addHistoryRecord(updatedEquipment, "edit", user?.email);
 
       setEquipmentList((prev) =>
         prev.map((item) => {
@@ -567,6 +579,7 @@ function MainApp() {
                     equipmentList={equipmentList}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    user={user}
                   />
                 </>
               ) : (

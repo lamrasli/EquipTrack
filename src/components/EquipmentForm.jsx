@@ -85,8 +85,14 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
 
   // Fonction pour valider le numéro de série
   const validateSerialNumber = (value) => {
+    // Vérifie que seules les majuscules et chiffres sont présents
     const regex = /^[A-Z0-9]*$/;
-    return regex.test(value);
+
+    // Vérifie qu'il y a au moins une lettre et un chiffre
+    const hasLetters = /[A-Z]/.test(value);
+    const hasNumbers = /\d/.test(value);
+
+    return regex.test(value) && hasLetters && hasNumbers;
   };
 
   const handleChange = (e) => {
@@ -94,11 +100,17 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
 
     if (name === "numero_serie") {
       const upperCaseValue = value.toUpperCase();
-      if (!validateSerialNumber(upperCaseValue)) {
+
+      if (!/^[A-Z0-9]*$/.test(upperCaseValue)) {
         setSerialError("Seules les majuscules et les chiffres sont autorisés.");
+      } else if (!/[A-Z]/.test(upperCaseValue) || !/\d/.test(upperCaseValue)) {
+        setSerialError(
+          "Le numéro de série doit contenir au moins une lettre et un chiffre."
+        );
       } else {
         setSerialError("");
       }
+
       setFormData({ ...formData, [name]: upperCaseValue });
     } else {
       setFormData({ ...formData, [name]: value });
@@ -124,12 +136,23 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Données soumises:", formData);
+
+    // Validation du numéro de série
     if (!validateSerialNumber(formData.numero_serie)) {
-      setSerialError("Seules les majuscules et les chiffres sont autorisés.");
+      if (
+        !/[A-Z]/.test(formData.numero_serie) ||
+        !/\d/.test(formData.numero_serie)
+      ) {
+        setSerialError(
+          "Le numéro de série doit contenir des lettres et des chiffres."
+        );
+      } else {
+        setSerialError("Seules les majuscules et les chiffres sont autorisés.");
+      }
       return;
     }
 
+    // Vérification des doublons
     const isDuplicate = equipmentList.some(
       (item) =>
         item.numero_serie === formData.numero_serie &&
@@ -142,11 +165,13 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
       return;
     }
 
+    // Si tout est valide
     if (editEquipment) {
       onEdit(formData);
     } else {
       onAdd(formData);
     }
+
     setFormData({
       direction: "",
       type: "",
@@ -161,7 +186,7 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -261,11 +286,13 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
               >
                 <option value="">Sélectionner un modèle</option>
                 {formData.marque &&
-                  equipmentModels[formData.type][formData.marque].map((model) => (
-                    <option key={model} value={model}>
-                      {model}
-                    </option>
-                  ))}
+                  equipmentModels[formData.type][formData.marque].map(
+                    (model) => (
+                      <option key={model} value={model}>
+                        {model}
+                      </option>
+                    )
+                  )}
               </select>
             </div>
 
@@ -352,8 +379,17 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
               type="submit"
               className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
               </svg>
               {editEquipment ? "Modifier l'équipement" : "Ajouter l'équipement"}
             </button>

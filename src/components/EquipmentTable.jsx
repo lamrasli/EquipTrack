@@ -15,8 +15,9 @@ import { equipmentModels, directions } from "./EquipmentForm";
 import * as XLSX from "xlsx";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { getHistoryBySerialNumber } from "../historyService";
 
-const EquipmentTable = ({ equipmentList = [], onEdit, onDelete }) => {
+const EquipmentTable = ({ equipmentList = [], onEdit, onDelete, user }) => {
   const [filters, setFilters] = useState({
     status: "",
     type: "",
@@ -38,8 +39,27 @@ const EquipmentTable = ({ equipmentList = [], onEdit, onDelete }) => {
   const filtersRef = useRef(null);
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [historySearch, setHistorySearch] = useState("");
+  const [historyRecords, setHistoryRecords] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  const fetchHistory = async (numero_serie) => {
+    setLoadingHistory(true);
+    try {
+      console.log("Recherche de l'historique pour:", numero_serie); // Log de débogage
+      const records = await getHistoryBySerialNumber(numero_serie);
+      console.log("Résultats trouvés:", records); // Log de débogage
+      setHistoryRecords(records);
+    } catch (error) {
+      console.error("Error fetching history:", error);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   useEffect(() => {
+    if (showOffcanvas && historySearch) {
+      fetchHistory(historySearch.toUpperCase());
+    }
     const handleClickOutside = (event) => {
       if (
         datePickerRef.current &&
@@ -58,7 +78,7 @@ const EquipmentTable = ({ equipmentList = [], onEdit, onDelete }) => {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [showOffcanvas, historySearch]);
 
   const exportToExcel = () => {
     // 1. Préparer les données avec formatage français
@@ -743,7 +763,6 @@ const EquipmentTable = ({ equipmentList = [], onEdit, onDelete }) => {
           )}
         </AnimatePresence>
       </div>
-
       {/* Date Picker Modal */}
       <AnimatePresence>
         {showDatePicker && (
@@ -839,7 +858,6 @@ const EquipmentTable = ({ equipmentList = [], onEdit, onDelete }) => {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Table Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
@@ -966,7 +984,6 @@ const EquipmentTable = ({ equipmentList = [], onEdit, onDelete }) => {
           </table>
         </div>
       </div>
-
       {/* Pagination */}
       <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-sm text-gray-700">
@@ -984,44 +1001,380 @@ const EquipmentTable = ({ equipmentList = [], onEdit, onDelete }) => {
       {/* Historique Offcanvas */}
       <AnimatePresence>
         {showOffcanvas && (
-          <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25 }}
-            className="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-xl z-50"
-          >
-            <div className="p-6 h-full flex flex-col">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold">
-                  Historique des modifications
-                </h2>
-                <button
-                  onClick={() => setShowOffcanvas(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <MdClose size={24} />
-                </button>
-              </div>
+          <>
+            {/* Overlay semi-transparent pour fermer en cliquant à l'extérieur */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => {
+                setShowOffcanvas(false);
+                setHistorySearch("");
+                setHistoryRecords([]);
+              }}
+              className="fixed inset-0 bg-black bg-opacity-50 z-40 cursor-pointer"
+            />
 
-              <div className="relative mb-4">
-                <input
-                  type="text"
-                  value={historySearch}
-                  onChange={(e) => setHistorySearch(e.target.value)}
-                  placeholder="Rechercher par numéro de série"
-                  className="w-full p-2 pl-10 border border-gray-300 rounded-md"
-                />
-                <MdSearch className="absolute left-3 top-3 text-gray-400" />
+            {/* Offcanvas principal */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 120 }}
+              className="fixed inset-y-0 right-0 w-full max-w-md bg-gradient-to-b from-gray-50 to-white shadow-2xl z-50 border-l border-gray-200"
+            >
+              <div className="h-full flex flex-col">
+                {/* Header avec effet de verre */}
+                <div className="bg-white/80 backdrop-blur-md border-b border-gray-200 p-6">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+                      <svg
+                        className="w-6 h-6 mr-2 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      Historique des modifications
+                    </h2>
+                    <button
+                      onClick={() => {
+                        setShowOffcanvas(false);
+                        setHistorySearch("");
+                        setHistoryRecords([]);
+                      }}
+                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    >
+                      <MdClose
+                        size={24}
+                        className="text-gray-500 hover:text-gray-700"
+                      />
+                    </button>
+                  </div>
+
+                  {/* Barre de recherche stylisée */}
+                  <div className="relative mt-4">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <MdSearch className="text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      value={historySearch}
+                      onChange={(e) => setHistorySearch(e.target.value)}
+                      placeholder="Rechercher par numéro de série..."
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    />
+                  </div>
+                </div>
+
+                {/* Contenu avec défilement */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  {loadingHistory ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex flex-col items-center justify-center h-64"
+                    >
+                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+                      <p className="text-gray-500">
+                        Chargement de l'historique...
+                      </p>
+                    </motion.div>
+                  ) : historyRecords.length === 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex flex-col items-center justify-center h-64 text-center"
+                    >
+                      <svg
+                        className="w-16 h-16 text-gray-300 mb-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1"
+                          d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {historySearch ? (
+                        <>
+                          <p className="text-gray-500 mb-1">
+                            Aucun historique trouvé pour
+                          </p>
+                          <p className="font-mono font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-md">
+                            {historySearch}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-gray-500 mb-2">
+                            Entrez un numéro de série
+                          </p>
+                          <p className="text-sm text-gray-400">
+                            L'historique des modifications apparaîtra ici
+                          </p>
+                        </>
+                      )}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="space-y-4"
+                    >
+                      {historyRecords.map((record) => (
+                        <motion.div
+                          key={record.id}
+                          initial={{ y: 10, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ duration: 0.2 }}
+                          className={`bg-white p-4 rounded-xl shadow-sm border-l-4 ${
+                            record.action === "add"
+                              ? "border-green-500"
+                              : record.action === "edit"
+                              ? "border-blue-500"
+                              : "border-red-500"
+                          } hover:shadow-md transition-shadow`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-bold text-gray-800 flex items-center">
+                                {record.type}
+                                <span className="mx-2 text-gray-300">/</span>
+                                {record.marque}
+                                <span className="mx-2 text-gray-300">/</span>
+                                {record.modele}
+                              </h3>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                <p className="text-sm text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded">
+                                  #{record.numero_serie}
+                                </p>
+                                {record.bureau && (
+                                  <p className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded flex items-center">
+                                    <svg
+                                      className="w-3 h-3 mr-1 text-gray-500"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                      />
+                                    </svg>
+                                    {record.bureau}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <span
+                              className={`px-3 py-1 text-xs font-medium rounded-full ${
+                                record.action === "add"
+                                  ? "bg-green-100 text-green-800"
+                                  : record.action === "edit"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {record.action === "add"
+                                ? "Ajout"
+                                : record.action === "edit"
+                                ? "Modification"
+                                : "Suppression"}
+                            </span>
+                          </div>
+
+                          {/* Section des détails avec mise en évidence des modifications */}
+                          <div className="mt-3 pt-3 border-t border-gray-100">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              {/* Direction */}
+                              <div>
+                                <p className="text-gray-500">Direction</p>
+                                <p
+                                  className={`font-medium ${
+                                    record.action === "edit" &&
+                                    record.details?.previousData?.direction !==
+                                      record.direction
+                                      ? "text-blue-600 bg-blue-50 px-2 py-1 rounded"
+                                      : ""
+                                  }`}
+                                >
+                                  {record.direction || "Non spécifié"}
+                                </p>
+                                {record.action === "edit" &&
+                                  record.details?.previousData?.direction && (
+                                    <p className="text-xs text-gray-400 line-through">
+                                      {record.details.previousData.direction}
+                                    </p>
+                                  )}
+                              </div>
+
+                              {/* Type - Couleur violette pour les modifications */}
+                              <div>
+                                <p className="text-gray-500">Type</p>
+                                <p
+                                  className={`font-medium ${
+                                    record.action === "edit" &&
+                                    record.details?.previousData?.type !==
+                                      record.type
+                                      ? "text-purple-600 bg-purple-50 px-2 py-1 rounded"
+                                      : ""
+                                  }`}
+                                >
+                                  {record.type || "Non spécifié"}
+                                </p>
+                                {record.action === "edit" &&
+                                  record.details?.previousData?.type && (
+                                    <p className="text-xs text-gray-400 line-through">
+                                      {record.details.previousData.type}
+                                    </p>
+                                  )}
+                              </div>
+
+                              {/* Marque - Couleur orange pour les modifications */}
+                              <div>
+                                <p className="text-gray-500">Marque</p>
+                                <p
+                                  className={`font-medium ${
+                                    record.action === "edit" &&
+                                    record.details?.previousData?.marque !==
+                                      record.marque
+                                      ? "text-orange-600 bg-orange-50 px-2 py-1 rounded"
+                                      : ""
+                                  }`}
+                                >
+                                  {record.marque || "Non spécifié"}
+                                </p>
+                                {record.action === "edit" &&
+                                  record.details?.previousData?.marque && (
+                                    <p className="text-xs text-gray-400 line-through">
+                                      {record.details.previousData.marque}
+                                    </p>
+                                  )}
+                              </div>
+
+                              {/* Modèle - Couleur rose pour les modifications */}
+                              <div>
+                                <p className="text-gray-500">Modèle</p>
+                                <p
+                                  className={`font-medium ${
+                                    record.action === "edit" &&
+                                    record.details?.previousData?.modele !==
+                                      record.modele
+                                      ? "text-pink-600 bg-pink-50 px-2 py-1 rounded"
+                                      : ""
+                                  }`}
+                                >
+                                  {record.modele || "Non spécifié"}
+                                </p>
+                                {record.action === "edit" &&
+                                  record.details?.previousData?.modele && (
+                                    <p className="text-xs text-gray-400 line-through">
+                                      {record.details.previousData.modele}
+                                    </p>
+                                  )}
+                              </div>
+
+                              {/* Statut */}
+                              <div>
+                                <p className="text-gray-500">Statut</p>
+                                <p
+                                  className={`font-medium ${
+                                    record.action === "edit" &&
+                                    record.details?.previousData?.statut !==
+                                      record.statut
+                                      ? "text-blue-600 bg-blue-50 px-2 py-1 rounded"
+                                      : ""
+                                  }`}
+                                >
+                                  {record.statut || "Non spécifié"}
+                                </p>
+                                {record.action === "edit" &&
+                                  record.details?.previousData?.statut && (
+                                    <p className="text-xs text-gray-400 line-through">
+                                      {record.details.previousData.statut}
+                                    </p>
+                                  )}
+                              </div>
+
+                              {/* Bureau */}
+                              <div>
+                                <p className="text-gray-500">Bureau</p>
+                                <p
+                                  className={`font-medium ${
+                                    record.action === "edit" &&
+                                    record.details?.previousData?.bureau !==
+                                      record.bureau
+                                      ? "text-blue-600 bg-blue-50 px-2 py-1 rounded"
+                                      : ""
+                                  }`}
+                                >
+                                  {record.bureau || "Non spécifié"}
+                                </p>
+                                {record.action === "edit" &&
+                                  record.details?.previousData?.bureau && (
+                                    <p className="text-xs text-gray-400 line-through">
+                                      {record.details.previousData.bureau}
+                                    </p>
+                                  )}
+                              </div>
+                            </div>
+
+                            <div className="mt-3 flex justify-between items-center">
+                              <div className="text-xs text-gray-400 flex items-center">
+                                <svg
+                                  className="w-3 h-3 mr-1"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                  />
+                                </svg>
+                                {record.user || "Utilisateur inconnu"}
+                              </div>
+
+                              <div className="text-xs text-gray-500">
+                                {record.timestamp?.toLocaleString("fr-FR", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }) || "Date inconnue"}
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Pied de page */}
+                <div className="bg-gray-50 p-4 border-t border-gray-200 text-center text-xs text-gray-500">
+                  {historyRecords.length > 0 && (
+                    <p>{historyRecords.length} entrées trouvées</p>
+                  )}
+                </div>
               </div>
-              <div className="flex-1 overflow-y-auto">
-                {/* Ici vous ajouterez la liste des historiques filtrés */}
-                <p className="text-gray-500">
-                  Fonctionnalité d'historique à implémenter
-                </p>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
