@@ -39,6 +39,7 @@ export const equipmentModels = {
     Canon: ["Selphy CP1300", "Selphy Square QX10"],
   },
 };
+
 export const directions = [
   "DRH",
   "DAFG",
@@ -64,6 +65,7 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
     date: "",
   });
   const [serialError, setSerialError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (editEquipment) {
@@ -83,15 +85,10 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
     setSerialError("");
   }, [editEquipment]);
 
-  // Fonction pour valider le numéro de série
   const validateSerialNumber = (value) => {
-    // Vérifie que seules les majuscules et chiffres sont présents
     const regex = /^[A-Z0-9]*$/;
-
-    // Vérifie qu'il y a au moins une lettre et un chiffre
     const hasLetters = /[A-Z]/.test(value);
     const hasNumbers = /\d/.test(value);
-
     return regex.test(value) && hasLetters && hasNumbers;
   };
 
@@ -134,10 +131,10 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
     setSerialError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    // Validation du numéro de série
     if (!validateSerialNumber(formData.numero_serie)) {
       if (
         !/[A-Z]/.test(formData.numero_serie) ||
@@ -149,10 +146,10 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
       } else {
         setSerialError("Seules les majuscules et les chiffres sont autorisés.");
       }
+      setIsSubmitting(false);
       return;
     }
 
-    // Vérification des doublons
     const isDuplicate = equipmentList.some(
       (item) =>
         item.numero_serie === formData.numero_serie &&
@@ -162,26 +159,30 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
 
     if (isDuplicate) {
       setSerialError("Ce numéro de série existe déjà.");
+      setIsSubmitting(false);
       return;
     }
 
-    // Si tout est valide
-    if (editEquipment) {
-      onEdit(formData);
-    } else {
-      onAdd(formData);
-    }
+    try {
+      if (editEquipment) {
+        await onEdit(formData);
+      } else {
+        await onAdd(formData);
+      }
 
-    setFormData({
-      direction: "",
-      type: "",
-      marque: "",
-      modele: "",
-      numero_serie: "",
-      bureau: "",
-      statut: "",
-      date: "",
-    });
+      setFormData({
+        direction: "",
+        type: "",
+        marque: "",
+        modele: "",
+        numero_serie: "",
+        bureau: "",
+        statut: "",
+        date: "",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -189,67 +190,112 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.5, type: "spring" }}
         className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200"
+        whileHover={{ boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
       >
-        {/* En-tête du formulaire */}
-        <div className="bg-gradient-to-r from-gray-600 to-gray-800 p-6 text-white">
-          <h2 className="text-2xl font-bold text-center">
+        {/* En-tête animé */}
+        <motion.div
+          className="bg-gradient-to-r from-gray-600 to-gray-800 p-6 text-white"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <motion.h2
+            className="text-2xl font-bold text-center"
+            initial={{ y: -10 }}
+            animate={{ y: 0 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
             {editEquipment ? "Modifier un Équipement" : "Ajouter un Équipement"}
-          </h2>
-        </div>
+          </motion.h2>
+        </motion.div>
 
-        {/* Corps du formulaire - Structure conservée mais style amélioré */}
+        {/* Formulaire avec animations */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ staggerChildren: 0.05 }}
+          >
             {/* Direction */}
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+            >
               <label className="block text-sm font-medium text-gray-700">
                 Direction <span className="text-red-500">*</span>
               </label>
-              <select
+              <motion.select
                 name="direction"
                 value={formData.direction}
                 onChange={handleChange}
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                whileHover={{ scale: 1.01 }}
+                whileFocus={{ scale: 1.02 }}
               >
                 <option value="">Sélectionner une direction</option>
-                {directions.map((direction) => (
-                  <option key={direction} value={direction}>
+                {directions.map((direction, index) => (
+                  <motion.option
+                    key={direction}
+                    value={direction}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
                     {direction}
-                  </option>
+                  </motion.option>
                 ))}
-              </select>
-            </div>
+              </motion.select>
+            </motion.div>
 
             {/* Type */}
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
               <label className="block text-sm font-medium text-gray-700">
                 Type <span className="text-red-500">*</span>
               </label>
-              <select
+              <motion.select
                 name="type"
                 value={formData.type}
                 onChange={handleTypeChange}
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                whileHover={{ scale: 1.01 }}
               >
                 <option value="">Sélectionner un type</option>
-                {Object.keys(equipmentModels).map((type) => (
-                  <option key={type} value={type}>
+                {Object.keys(equipmentModels).map((type, index) => (
+                  <motion.option
+                    key={type}
+                    value={type}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.05 + 0.1 }}
+                  >
                     {type}
-                  </option>
+                  </motion.option>
                 ))}
-              </select>
-            </div>
+              </motion.select>
+            </motion.div>
 
             {/* Marque */}
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
               <label className="block text-sm font-medium text-gray-700">
                 Marque <span className="text-red-500">*</span>
               </label>
-              <select
+              <motion.select
                 name="marque"
                 value={formData.marque}
                 onChange={handleMarqueChange}
@@ -258,23 +304,37 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
                 className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
                   !formData.type ? "bg-gray-100" : ""
                 }`}
+                whileHover={{ scale: !formData.type ? 1 : 1.01 }}
               >
                 <option value="">Sélectionner une marque</option>
                 {formData.type &&
-                  Object.keys(equipmentModels[formData.type]).map((marque) => (
-                    <option key={marque} value={marque}>
-                      {marque}
-                    </option>
-                  ))}
-              </select>
-            </div>
+                  Object.keys(equipmentModels[formData.type]).map(
+                    (marque, index) => (
+                      <motion.option
+                        key={marque}
+                        value={marque}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.05 + 0.2 }}
+                      >
+                        {marque}
+                      </motion.option>
+                    )
+                  )}
+              </motion.select>
+            </motion.div>
 
             {/* Modèle */}
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               <label className="block text-sm font-medium text-gray-700">
                 Modèle <span className="text-red-500">*</span>
               </label>
-              <select
+              <motion.select
                 name="modele"
                 value={formData.modele}
                 onChange={handleChange}
@@ -283,117 +343,180 @@ const EquipmentForm = ({ onAdd, onEdit, editEquipment, equipmentList }) => {
                 className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
                   !formData.marque ? "bg-gray-100" : ""
                 }`}
+                whileHover={{ scale: !formData.marque ? 1 : 1.01 }}
               >
                 <option value="">Sélectionner un modèle</option>
                 {formData.marque &&
                   equipmentModels[formData.type][formData.marque].map(
-                    (model) => (
-                      <option key={model} value={model}>
+                    (model, index) => (
+                      <motion.option
+                        key={model}
+                        value={model}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.05 + 0.3 }}
+                      >
                         {model}
-                      </option>
+                      </motion.option>
                     )
                   )}
-              </select>
-            </div>
+              </motion.select>
+            </motion.div>
 
             {/* Numéro de série */}
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
               <label className="block text-sm font-medium text-gray-700">
                 Numéro de série <span className="text-red-500">*</span>
               </label>
-              <input
+              <motion.input
                 name="numero_serie"
                 value={formData.numero_serie}
                 onChange={handleChange}
                 placeholder="Ex: ABC123456"
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                whileHover={{ scale: 1.01 }}
+                whileFocus={{ scale: 1.02 }}
               />
               <AnimatePresence>
                 {serialError && (
                   <motion.p
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="text-red-500 text-sm"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="text-red-500 text-sm overflow-hidden"
                   >
                     {serialError}
                   </motion.p>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
 
             {/* Bureau */}
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
               <label className="block text-sm font-medium text-gray-700">
                 Bureau <span className="text-red-500">*</span>
               </label>
-              <input
+              <motion.input
                 name="bureau"
                 value={formData.bureau}
                 onChange={handleChange}
                 placeholder="Ex: Bureau 205, Bâtiment A"
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                whileHover={{ scale: 1.01 }}
               />
-            </div>
+            </motion.div>
 
             {/* Statut */}
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
               <label className="block text-sm font-medium text-gray-700">
                 Statut <span className="text-red-500">*</span>
               </label>
-              <select
+              <motion.select
                 name="statut"
                 value={formData.statut}
                 onChange={handleChange}
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                whileHover={{ scale: 1.01 }}
               >
                 <option value="">Sélectionner un statut</option>
                 <option value="Fonctionnel">Fonctionnel</option>
                 <option value="Réformé en bureau">Réformé en bureau</option>
                 <option value="Réformé en stock">Réformé en stock</option>
-              </select>
-            </div>
+              </motion.select>
+            </motion.div>
 
             {/* Date */}
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.7 }}
+            >
               <label className="block text-sm font-medium text-gray-700">
                 Date <span className="text-red-500">*</span>
               </label>
-              <input
+              <motion.input
                 type="date"
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
                 required
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                whileHover={{ scale: 1.01 }}
               />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* Bouton de soumission */}
-          <div className="flex justify-center pt-6">
-            <button
+          {/* Bouton de soumission animé */}
+          <motion.div
+            className="flex justify-center pt-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <motion.button
               type="submit"
-              className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              className={`px-6 py-3 rounded-lg transition flex items-center gap-2 ${
+                isSubmitting
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}
+              whileHover={!isSubmitting ? { scale: 1.05 } : {}}
+              whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+              disabled={isSubmitting}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              {editEquipment ? "Modifier l'équipement" : "Ajouter l'équipement"}
-            </button>
-          </div>
+              {isSubmitting ? (
+                <>
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="block w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                  />
+                  Enregistrement...
+                </>
+              ) : (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  {editEquipment
+                    ? "Modifier l'équipement"
+                    : "Ajouter l'équipement"}
+                </>
+              )}
+            </motion.button>
+          </motion.div>
         </form>
       </motion.div>
     </div>

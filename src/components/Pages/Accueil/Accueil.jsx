@@ -40,6 +40,7 @@ const Accueil = ({ equipmentList }) => {
     equipmentsPerOffice: 0,
   });
 
+  // Animation pour les chiffres qui montent
   useEffect(() => {
     const calculateStats = () => {
       const totalEquipment = equipmentList.length;
@@ -67,14 +68,18 @@ const Accueil = ({ equipmentList }) => {
 
       const incrementCount = (target, key) => {
         let count = 0;
+        const increment = target / 30; // Pour une animation plus fluide
         const interval = setInterval(() => {
           if (count < target) {
-            count++;
-            setCounts((prevCounts) => ({ ...prevCounts, [key]: count }));
+            count = Math.min(count + increment, target);
+            setCounts((prevCounts) => ({ 
+              ...prevCounts, 
+              [key]: Math.round(count) 
+            }));
           } else {
             clearInterval(interval);
           }
-        }, 10);
+        }, 20);
       };
 
       incrementCount(stats.totalEquipment, "equipments");
@@ -152,9 +157,42 @@ const Accueil = ({ equipmentList }) => {
         },
       },
     },
+    animation: {
+      duration: 2000,
+      easing: 'easeOutQuart',
+      animateScale: true
+    }
   };
 
   const recentEquipments = equipmentList.slice(0, 5);
+
+  // Animation variants
+  const cardVariants = {
+    offscreen: {
+      y: 50,
+      opacity: 0
+    },
+    onscreen: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        bounce: 0.4,
+        duration: 0.8
+      }
+    }
+  };
+
+  const fadeIn = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: {
+        duration: 0.8,
+        ease: "easeInOut"
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
@@ -162,32 +200,54 @@ const Accueil = ({ equipmentList }) => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ 
+          duration: 0.6,
+          ease: [0.6, -0.05, 0.01, 0.99]
+        }}
         className="text-center mb-16"
       >
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6">
+        <motion.h1 
+          className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-500">
             EquipTrack Pro
           </span>
-        </h1>
-        <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto">
+        </motion.h1>
+        <motion.p 
+          className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
           La solution ultime pour une gestion optimisée de votre parc
           d'équipements
-        </p>
-        <div className="mt-8 flex justify-center space-x-4">
+        </motion.p>
+        <motion.div 
+          className="mt-8 flex justify-center space-x-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
           <Link
             to="/Gestion-Des-Équipements"
-            className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-lg shadow-lg hover:bg-indigo-700 transition-all duration-300 hover:shadow-xl"
+            className="px-8 py-3 bg-indigo-600 text-white font-medium rounded-lg shadow-lg hover:bg-indigo-700 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             Explorer
           </Link>
           <Link
             to="/Equipment-Documentation"
-            className="px-8 py-3 bg-white text-indigo-600 font-medium rounded-lg shadow-md hover:bg-gray-50 transition-all duration-300 border border-indigo-100"
+            className="px-8 py-3 bg-white text-indigo-600 font-medium rounded-lg shadow-md hover:bg-gray-50 transition-all duration-300 border border-indigo-100 transform hover:-translate-y-1"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             Documentation
           </Link>
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* Stats Cards */}
@@ -221,15 +281,28 @@ const Accueil = ({ equipmentList }) => {
         ].map((stat, index) => (
           <motion.div
             key={stat.label}
-            initial={{ opacity: 0, y: 50 }}
-            animate={controls}
-            transition={{ duration: 0.5, delay: index * 0.15 }}
-            className={`bg-gradient-to-br ${stat.color} text-white flex flex-col items-center justify-between p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 min-h-[180px] w-full`}
+            initial="offscreen"
+            whileInView="onscreen"
+            viewport={{ once: true, amount: 0.5 }}
+            variants={cardVariants}
+            transition={{ delay: index * 0.1 }}
+            className={`bg-gradient-to-br ${stat.color} text-white flex flex-col items-center justify-between p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 min-h-[180px] w-full transform hover:-translate-y-1 hover:scale-[1.02]`}
           >
             <div className="flex items-center justify-between w-full">
-              <div className="text-3xl p-3 bg-white/20 rounded-full">
+              <motion.div 
+                className="text-3xl p-3 bg-white/20 rounded-full"
+                animate={{
+                  rotate: [0, 10, -10, 0],
+                  scale: [1, 1.1, 1.1, 1]
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+              >
                 {stat.icon}
-              </div>
+              </motion.div>
               <div className="text-4xl font-bold drop-shadow-md">
                 {stat.value}
               </div>
@@ -250,29 +323,42 @@ const Accueil = ({ equipmentList }) => {
 
       {/* Chart and Stats Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-        {/* Graphique - Prend 2/3 de l'espace sur grand écran */}
+        {/* Graphique */}
         <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
+          initial={{ opacity: 0, x: -50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ 
+            duration: 0.8,
+            type: "spring",
+            stiffness: 100
+          }}
           viewport={{ once: true }}
-          className="bg-white flex flex-col justify-center p-6 rounded-2xl shadow-lg lg:col-span-2"
+          className="bg-white flex flex-col justify-center p-6 rounded-2xl shadow-lg lg:col-span-2 hover:shadow-2xl transition-shadow duration-300"
         >
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Analyse des équipements
           </h2>
-          <div className="w-full h-96 ">
-            <Bar data={chartData} options={chartOptions} />
+          <div className="w-full h-96">
+            <Bar 
+              data={chartData} 
+              options={chartOptions}
+              className="hover:scale-[1.01] transition-transform duration-300"
+            />
           </div>
         </motion.div>
 
-        {/* Nouvelles statistiques - Prend 1/3 de l'espace sur grand écran */}
+        {/* Statistiques clés */}
         <motion.div
           initial={{ opacity: 0, x: 50 }}
           whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ 
+            duration: 0.8, 
+            delay: 0.2,
+            type: "spring",
+            stiffness: 100
+          }}
           viewport={{ once: true }}
-          className="bg-white p-6 rounded-2xl shadow-lg"
+          className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300"
         >
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Statistiques clés
@@ -280,8 +366,10 @@ const Accueil = ({ equipmentList }) => {
 
           <div className="space-y-6">
             {/* Stat 1 - Équipements par statut */}
-            {/* Stat 1 - Équipements par statut - Version alternative */}
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <motion.div 
+              className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors duration-300"
+              whileHover={{ scale: 1.02 }}
+            >
               <h3 className="font-medium text-gray-700 mb-2">
                 Répartition par statut
               </h3>
@@ -317,8 +405,8 @@ const Accueil = ({ equipmentList }) => {
                               {count} ({percentage}%)
                             </span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
+                          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <motion.div
                               className={`h-2 rounded-full ${
                                 statut === "Fonctionnel"
                                   ? "bg-green-500"
@@ -326,7 +414,10 @@ const Accueil = ({ equipmentList }) => {
                                   ? "bg-red-500"
                                   : "bg-amber-500"
                               }`}
-                              style={{ width: `${percentage}%` }}
+                              initial={{ width: 0 }}
+                              whileInView={{ width: `${percentage}%` }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 1, delay: 0.5 }}
                             />
                           </div>
                         </div>
@@ -334,34 +425,56 @@ const Accueil = ({ equipmentList }) => {
                     });
                 })()}
               </div>
-            </div>
+            </motion.div>
 
             {/* Stat 2 - Top catégories */}
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <motion.div 
+              className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors duration-300"
+              whileHover={{ scale: 1.02 }}
+            >
               <h3 className="font-medium text-gray-700 mb-3">Top catégories</h3>
               <ul className="space-y-3">
                 {Object.entries(equipmentByCategory)
                   .sort((a, b) => b[1] - a[1])
                   .slice(0, 3)
-                  .map(([category, count]) => (
-                    <li key={category} className="flex items-center">
+                  .map(([category, count], index) => (
+                    <motion.li 
+                      key={category} 
+                      className="flex items-center"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.2 + 0.5 }}
+                    >
                       <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mr-3">
                         {count}
                       </span>
                       <span className="text-gray-600">{category}</span>
-                    </li>
+                    </motion.li>
                   ))}
               </ul>
-            </div>
+            </motion.div>
 
             {/* Stat 3 - Dernière mise à jour */}
-            <div className="bg-gray-50 p-4 rounded-lg">
+            <motion.div 
+              className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors duration-300"
+              whileHover={{ scale: 1.02 }}
+            >
               <h3 className="font-medium text-gray-700 mb-2">
                 Dernière activité
               </h3>
               {recentEquipments.length > 0 && (
                 <div className="flex items-start">
-                  <div className="bg-blue-100 text-blue-600 p-2 rounded-lg mr-3">
+                  <motion.div 
+                    className="bg-blue-100 text-blue-600 p-2 rounded-lg mr-3"
+                    animate={{
+                      rotate: [0, 10, -10, 0],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 3
+                    }}
+                  >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5"
@@ -374,7 +487,7 @@ const Accueil = ({ equipmentList }) => {
                         clipRule="evenodd"
                       />
                     </svg>
-                  </div>
+                  </motion.div>
                   <div>
                     <p className="text-sm text-gray-600">
                       Dernier ajout:{" "}
@@ -394,61 +507,80 @@ const Accueil = ({ equipmentList }) => {
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           </div>
         </motion.div>
       </div>
 
       {/* Recent Equipment Table */}
       <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        whileInView={{ opacity: 1, x: 0 }}
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         viewport={{ once: true }}
         className="mb-16"
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <motion.h2 
+            className="text-2xl font-bold text-gray-900"
+            whileHover={{ scale: 1.02 }}
+          >
             Équipements récents
-          </h2>
+          </motion.h2>
           <Link
             to="/Gestion-Des-Équipements"
-            className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center"
+            className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center group"
           >
-            Voir tout <span className="ml-1">→</span>
+            <motion.span
+              whileHover={{ x: 3 }}
+              className="group-hover:underline"
+            >
+              Voir tout
+            </motion.span>
+            <motion.span
+              animate={{ x: [0, 5, 0] }}
+              transition={{ 
+                duration: 1.5,
+                repeat: Infinity
+              }}
+              className="ml-1"
+            >
+              →
+            </motion.span>
           </Link>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <motion.div
+          className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
+          whileHover={{ scale: 1.005 }}
+        >
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Marque
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Modèle
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    N° Série
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Statut
-                  </th>
+                  {["Type", "Marque", "Modèle", "N° Série", "Statut"].map((header) => (
+                    <th 
+                      key={header}
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        {header}
+                      </motion.div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {recentEquipments.map((equipment, index) => (
                   <motion.tr
                     key={equipment.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
                     className="hover:bg-gray-50 transition-colors duration-150"
+                    whileHover={{ scale: 1.01 }}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {equipment.type}
@@ -463,7 +595,7 @@ const Accueil = ({ equipmentList }) => {
                       {equipment.numero_serie}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span
+                      <motion.span
                         className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                           equipment.statut === "Réformé en bureau"
                             ? "bg-red-100 text-red-800"
@@ -471,16 +603,17 @@ const Accueil = ({ equipmentList }) => {
                             ? "bg-amber-100 text-amber-800"
                             : "bg-green-100 text-green-800"
                         }`}
+                        whileHover={{ scale: 1.1 }}
                       >
                         {equipment.statut}
-                      </span>
+                      </motion.span>
                     </td>
                   </motion.tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* Equipment Gallery */}
@@ -491,9 +624,12 @@ const Accueil = ({ equipmentList }) => {
         viewport={{ once: true }}
         className="mb-16"
       >
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <motion.h2 
+          className="text-2xl font-bold text-gray-900 mb-6"
+          whileHover={{ scale: 1.02 }}
+        >
           Notre parc d'équipements
-        </h2>
+        </motion.h2>
         <Swiper
           modules={[Navigation, Pagination, Autoplay]}
           spaceBetween={30}
@@ -503,7 +639,10 @@ const Accueil = ({ equipmentList }) => {
             1024: { slidesPerView: 3 },
           }}
           navigation
-          pagination={{ clickable: true }}
+          pagination={{ 
+            clickable: true,
+            dynamicBullets: true
+          }}
           loop={true}
           autoplay={{
             delay: 2500,
@@ -514,13 +653,21 @@ const Accueil = ({ equipmentList }) => {
         >
           {equipmentData.map((item) => (
             <SwiperSlide key={item.id}>
-              <div className="relative h-80 group">
+              <motion.div 
+                className="relative h-80 group"
+                whileHover={{ scale: 1.03 }}
+              >
                 <img
                   src={item.image}
                   alt={item.title || item.model}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end p-6">
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end p-6"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
                   <div>
                     <h3 className="text-xl font-bold text-white">
                       {item.brand} {item.title || item.model}
@@ -529,8 +676,8 @@ const Accueil = ({ equipmentList }) => {
                       {item.description || item.category}
                     </p>
                   </div>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             </SwiperSlide>
           ))}
         </Swiper>

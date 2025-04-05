@@ -369,12 +369,12 @@ const EquipmentStatistics = ({ equipmentList }) => {
         </p>
       </motion.div>
 
-      {/* Main Stats Cards - Enhanced Design */}
+      {/* Main Stats Cards - Enhanced Design with Advanced Animations */}
       <motion.div
         variants={fadeInUp}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true }}
+        viewport={{ once: true, amount: 0.2 }}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8"
       >
         {[
@@ -416,58 +416,192 @@ const EquipmentStatistics = ({ equipmentList }) => {
         ].map((stat, index) => (
           <motion.div
             key={index}
-            variants={fadeInUp}
-            transition={{ delay: index * 0.1 }}
-            className={`bg-gradient-to-br ${stat.color} text-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300`}
+            variants={{
+              hidden: { opacity: 0, y: 20, scale: 0.95 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                transition: {
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 10,
+                  delay: index * 0.1,
+                },
+              },
+            }}
+            className={`relative bg-gradient-to-br ${stat.color} text-white p-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group`}
             title={stat.tooltip}
+            whileHover={{
+              y: -5,
+              scale: 1.03,
+              boxShadow:
+                "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            }}
+            whileTap={{ scale: 0.98 }}
           >
-            <div className="flex items-center justify-between">
+            {/* Animated background element */}
+            <motion.div
+              className="absolute inset-0 bg-white opacity-0"
+              whileHover={{ opacity: 0.1 }}
+              transition={{ duration: 0.3 }}
+            />
+
+            {/* Wave effect on hover */}
+            <motion.div
+              className="absolute bottom-0 left-0 right-0 h-1 bg-white opacity-30"
+              whileHover={{ scaleX: 1.5, opacity: 0.5 }}
+              transition={{ duration: 0.3 }}
+            />
+
+            <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm font-medium">{stat.title}</p>
-                <p className="text-2xl font-bold">{stat.value}</p>
+                <h3 className="text-sm font-medium opacity-90">{stat.title}</h3>
+                <motion.p
+                  className="text-3xl font-bold mt-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {stat.value.toLocaleString()}
+                </motion.p>
               </div>
-              <span className="text-2xl">{stat.icon}</span>
+
+              {/* Animated icon */}
+              <motion.div
+                className="p-2 rounded-lg bg-black bg-opacity-20"
+                whileHover={{
+                  scale: 1.1,
+                  rotate: 5,
+                  backgroundColor: "rgba(0,0,0,0.3)",
+                }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                {typeof stat.icon === "string" ? (
+                  <span className="text-4xl">{stat.icon}</span>
+                ) : (
+                  stat.icon
+                )}
+              </motion.div>
             </div>
+
+            {/* Subtle floating particles */}
+            <motion.div
+              className="absolute top-0 left-0 w-full h-full pointer-events-none"
+              initial={{ opacity: 0 }}
+              whileHover={{ opacity: 1 }}
+            >
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute bg-white rounded-full"
+                  style={{
+                    width: Math.random() * 4 + 2 + "px",
+                    height: Math.random() * 4 + 2 + "px",
+                    top: Math.random() * 60 + "%",
+                    left: Math.random() * 80 + 10 + "%",
+                  }}
+                  animate={{
+                    y: [0, -10, 0],
+                    opacity: [0.3, 0.8, 0],
+                  }}
+                  transition={{
+                    duration: Math.random() * 3 + 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: Math.random() * 2,
+                  }}
+                />
+              ))}
+            </motion.div>
           </motion.div>
         ))}
       </motion.div>
 
-      {/* Statistiques des Directions - Version Professionnelle et Créative */}
+      {/* Statistiques des Directions - Version Professionnelle avec Micro-interactions */}
       <motion.div
         variants={fadeInUp}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
         className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 mb-8"
+        whileHover={{
+          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
+          y: -2,
+        }}
+        transition={{ type: "spring", stiffness: 300 }}
       >
         <div className="p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
+            <motion.h3
+              className="text-2xl font-bold text-gray-800 mb-4 md:mb-0"
+              whileHover={{ x: 3 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
               Statistiques par Direction
-              <span className="block text-sm font-normal text-gray-500 mt-1">
+              <motion.span
+                className="block text-sm font-normal text-gray-500 mt-1"
+                initial={{ opacity: 0.8 }}
+                whileHover={{ opacity: 1 }}
+              >
                 Analyse détaillée des équipements par direction
-              </span>
-            </h3>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+              </motion.span>
+            </motion.h3>
+
+            <motion.div
+              className="flex items-center space-x-2"
+              whileHover={{ scale: 1.05 }}
+            >
+              <motion.span
+                className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-800 rounded-full"
+                animate={{
+                  backgroundColor: ["#dbeafe", "#bfdbfe", "#dbeafe"],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
                 {Object.keys(directionStats).length} Directions
-              </span>
-            </div>
+              </motion.span>
+            </motion.div>
           </div>
 
-          {/* Cartes statistiques modernes */}
+          {/* Cartes statistiques modernes avec animations */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 shadow-sm">
-              <div className="flex items-center justify-between">
+            {/* Carte 1 - Directions actives */}
+            <motion.div
+              className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 shadow-sm relative overflow-hidden"
+              whileHover={{
+                y: -5,
+                boxShadow: "0 10px 15px -3px rgba(59, 130, 246, 0.3)",
+              }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <motion.div
+                className="absolute -right-4 -bottom-4 w-20 h-20 bg-blue-200 rounded-full opacity-20"
+                whileHover={{ scale: 1.5 }}
+              />
+              <div className="flex items-center justify-between relative z-10">
                 <div>
                   <p className="text-sm font-medium text-blue-800">
                     Directions actives
                   </p>
-                  <p className="text-3xl font-bold text-blue-900 mt-1">
+                  <motion.p
+                    className="text-3xl font-bold text-blue-900 mt-1"
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                  >
                     {Object.keys(directionStats).length}
-                  </p>
+                  </motion.p>
                 </div>
-                <div className="p-3 bg-blue-200 bg-opacity-50 rounded-lg">
+                <motion.div
+                  className="p-3 bg-blue-200 bg-opacity-50 rounded-lg"
+                  whileHover={{ rotate: 10, scale: 1.1 }}
+                >
                   <svg
                     className="w-6 h-6 text-blue-600"
                     fill="none"
@@ -481,17 +615,33 @@ const EquipmentStatistics = ({ equipmentList }) => {
                       d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                     />
                   </svg>
-                </div>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200 shadow-sm">
+            {/* Carte 2 - Taux de réforme */}
+            <motion.div
+              className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200 shadow-sm relative overflow-hidden"
+              whileHover={{
+                y: -5,
+                boxShadow: "0 10px 15px -3px rgba(124, 58, 237, 0.3)",
+              }}
+            >
+              <motion.div
+                className="absolute inset-0 bg-white opacity-0"
+                whileHover={{ opacity: 0.1 }}
+              />
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-purple-800">
                     Taux de réforme en bureau
                   </p>
-                  <p className="text-3xl font-bold text-purple-900 mt-1">
+                  <motion.p
+                    className="text-3xl font-bold text-purple-900 mt-1"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
                     {(
                       (Object.values(directionStats).reduce(
                         (acc, dir) =>
@@ -502,9 +652,17 @@ const EquipmentStatistics = ({ equipmentList }) => {
                       100
                     ).toFixed(1)}
                     %
-                  </p>
+                  </motion.p>
                 </div>
-                <div className="p-3 bg-purple-200 bg-opacity-50 rounded-lg">
+                <motion.div
+                  className="p-3 bg-purple-200 bg-opacity-50 rounded-lg"
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
                   <svg
                     className="w-6 h-6 text-purple-600"
                     fill="none"
@@ -518,24 +676,39 @@ const EquipmentStatistics = ({ equipmentList }) => {
                       d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                     />
                   </svg>
-                </div>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border border-green-200 shadow-sm">
+            {/* Carte 3 - Équipements fonctionnels */}
+            <motion.div
+              className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border border-green-200 shadow-sm"
+              whileHover={{
+                scale: 1.01,
+                boxShadow: "0 10px 15px -3px rgba(5, 150, 105, 0.3)",
+              }}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-green-800">
                     Équipements fonctionnels
                   </p>
-                  <p className="text-3xl font-bold text-green-900 mt-1">
+                  <motion.p
+                    className="text-3xl font-bold text-green-900 mt-1"
+                    initial={{ y: 10 }}
+                    animate={{ y: 0 }}
+                  >
                     {Object.values(directionStats).reduce(
                       (acc, dir) => acc + dir.functionalCount,
                       0
                     )}
-                  </p>
+                  </motion.p>
                 </div>
-                <div className="p-3 bg-green-200 bg-opacity-50 rounded-lg">
+                <motion.div
+                  className="p-3 bg-green-200 bg-opacity-50 rounded-lg"
+                  whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.9 }}
+                >
                   <svg
                     className="w-6 h-6 text-green-600"
                     fill="none"
@@ -549,9 +722,9 @@ const EquipmentStatistics = ({ equipmentList }) => {
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                </div>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           {/* Tableau amélioré */}
@@ -584,8 +757,9 @@ const EquipmentStatistics = ({ equipmentList }) => {
                   .sort((a, b) => {
                     const tauxA = a[1].reformedInBureauCount / a[1].total;
                     const tauxB = b[1].reformedInBureauCount / b[1].total;
-                    return tauxB - tauxA; // Pour un tri décroissant
+                    return tauxB - tauxA;
                   })
+                  .slice((currentPage - 1) * 5, currentPage * 5) // Afficher seulement 5 directions par page
                   .map(([direction, data]) => (
                     <motion.tr
                       key={direction}
@@ -663,6 +837,113 @@ const EquipmentStatistics = ({ equipmentList }) => {
                   ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Pagination améliorée */}
+          <div className="mt-4 flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Affichage des directions {(currentPage - 1) * 5 + 1} à{" "}
+              {Math.min(currentPage * 5, Object.keys(directionStats).length)}{" "}
+              sur {Object.keys(directionStats).length}
+            </div>
+
+            <div className="flex space-x-1">
+              {currentPage > 1 && (
+                <motion.button
+                  onClick={() => setCurrentPage(1)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  &laquo;
+                </motion.button>
+              )}
+
+              {currentPage > 1 && (
+                <motion.button
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  &lsaquo;
+                </motion.button>
+              )}
+
+              {Array.from(
+                { length: Math.ceil(Object.keys(directionStats).length / 5) },
+                (_, i) => {
+                  const page = i + 1;
+                  // Afficher seulement les premières pages, la page actuelle et les dernières pages
+                  if (
+                    page === 1 ||
+                    page === 2 ||
+                    page === currentPage ||
+                    page ===
+                      Math.ceil(Object.keys(directionStats).length / 5) - 1 ||
+                    page ===
+                      Math.ceil(Object.keys(directionStats).length / 5) ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                  ) {
+                    return (
+                      <motion.button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`px-3 py-1 rounded-md ${
+                          page === currentPage
+                            ? "bg-blue-500 text-white"
+                            : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {page}
+                      </motion.button>
+                    );
+                  } else if (
+                    (page === currentPage - 2 && currentPage > 3) ||
+                    (page === currentPage + 2 &&
+                      currentPage <
+                        Math.ceil(Object.keys(directionStats).length / 5) - 2)
+                  ) {
+                    return (
+                      <span key={page} className="px-2 py-1">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                }
+              )}
+
+              {currentPage <
+                Math.ceil(Object.keys(directionStats).length / 5) && (
+                <motion.button
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  &rsaquo;
+                </motion.button>
+              )}
+
+              {currentPage <
+                Math.ceil(Object.keys(directionStats).length / 5) && (
+                <motion.button
+                  onClick={() =>
+                    setCurrentPage(
+                      Math.ceil(Object.keys(directionStats).length / 5)
+                    )
+                  }
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-3 py-1 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  &raquo;
+                </motion.button>
+              )}
+            </div>
           </div>
         </div>
       </motion.div>
