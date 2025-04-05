@@ -72,9 +72,9 @@ const Accueil = ({ equipmentList }) => {
         const interval = setInterval(() => {
           if (count < target) {
             count = Math.min(count + increment, target);
-            setCounts((prevCounts) => ({ 
-              ...prevCounts, 
-              [key]: Math.round(count) 
+            setCounts((prevCounts) => ({
+              ...prevCounts,
+              [key]: Math.round(count),
             }));
           } else {
             clearInterval(interval);
@@ -159,9 +159,9 @@ const Accueil = ({ equipmentList }) => {
     },
     animation: {
       duration: 2000,
-      easing: 'easeOutQuart',
-      animateScale: true
-    }
+      easing: "easeOutQuart",
+      animateScale: true,
+    },
   };
 
   const recentEquipments = equipmentList.slice(0, 5);
@@ -170,7 +170,7 @@ const Accueil = ({ equipmentList }) => {
   const cardVariants = {
     offscreen: {
       y: 50,
-      opacity: 0
+      opacity: 0,
     },
     onscreen: {
       y: 0,
@@ -178,20 +178,9 @@ const Accueil = ({ equipmentList }) => {
       transition: {
         type: "spring",
         bounce: 0.4,
-        duration: 0.8
-      }
-    }
-  };
-
-  const fadeIn = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: {
         duration: 0.8,
-        ease: "easeInOut"
-      }
-    }
+      },
+    },
   };
 
   return (
@@ -200,13 +189,13 @@ const Accueil = ({ equipmentList }) => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ 
+        transition={{
           duration: 0.6,
-          ease: [0.6, -0.05, 0.01, 0.99]
+          ease: [0.6, -0.05, 0.01, 0.99],
         }}
         className="text-center mb-16"
       >
-        <motion.h1 
+        <motion.h1
           className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -216,7 +205,7 @@ const Accueil = ({ equipmentList }) => {
             EquipTrack Pro
           </span>
         </motion.h1>
-        <motion.p 
+        <motion.p
           className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -225,7 +214,7 @@ const Accueil = ({ equipmentList }) => {
           La solution ultime pour une gestion optimisée de votre parc
           d'équipements
         </motion.p>
-        <motion.div 
+        <motion.div
           className="mt-8 flex justify-center space-x-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -289,16 +278,16 @@ const Accueil = ({ equipmentList }) => {
             className={`bg-gradient-to-br ${stat.color} text-white flex flex-col items-center justify-between p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 min-h-[180px] w-full transform hover:-translate-y-1 hover:scale-[1.02]`}
           >
             <div className="flex items-center justify-between w-full">
-              <motion.div 
+              <motion.div
                 className="text-3xl p-3 bg-white/20 rounded-full"
                 animate={{
                   rotate: [0, 10, -10, 0],
-                  scale: [1, 1.1, 1.1, 1]
+                  scale: [1, 1.1, 1.1, 1],
                 }}
                 transition={{
                   duration: 1.5,
                   repeat: Infinity,
-                  repeatType: "reverse"
+                  repeatType: "reverse",
                 }}
               >
                 {stat.icon}
@@ -327,10 +316,10 @@ const Accueil = ({ equipmentList }) => {
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           whileInView={{ opacity: 1, x: 0 }}
-          transition={{ 
+          transition={{
             duration: 0.8,
             type: "spring",
-            stiffness: 100
+            stiffness: 100,
           }}
           viewport={{ once: true }}
           className="bg-white flex flex-col justify-center p-6 rounded-2xl shadow-lg lg:col-span-2 hover:shadow-2xl transition-shadow duration-300"
@@ -339,8 +328,8 @@ const Accueil = ({ equipmentList }) => {
             Analyse des équipements
           </h2>
           <div className="w-full h-96">
-            <Bar 
-              data={chartData} 
+            <Bar
+              data={chartData}
               options={chartOptions}
               className="hover:scale-[1.01] transition-transform duration-300"
             />
@@ -351,11 +340,11 @@ const Accueil = ({ equipmentList }) => {
         <motion.div
           initial={{ opacity: 0, x: 50 }}
           whileInView={{ opacity: 1, x: 0 }}
-          transition={{ 
-            duration: 0.8, 
+          transition={{
+            duration: 0.8,
             delay: 0.2,
             type: "spring",
-            stiffness: 100
+            stiffness: 100,
           }}
           viewport={{ once: true }}
           className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300"
@@ -366,7 +355,7 @@ const Accueil = ({ equipmentList }) => {
 
           <div className="space-y-6">
             {/* Stat 1 - Équipements par statut */}
-            <motion.div 
+            <motion.div
               className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors duration-300"
               whileHover={{ scale: 1.02 }}
             >
@@ -428,7 +417,7 @@ const Accueil = ({ equipmentList }) => {
             </motion.div>
 
             {/* Stat 2 - Top catégories */}
-            <motion.div 
+            <motion.div
               className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors duration-300"
               whileHover={{ scale: 1.02 }}
             >
@@ -438,8 +427,8 @@ const Accueil = ({ equipmentList }) => {
                   .sort((a, b) => b[1] - a[1])
                   .slice(0, 3)
                   .map(([category, count], index) => (
-                    <motion.li 
-                      key={category} 
+                    <motion.li
+                      key={category}
                       className="flex items-center"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -455,7 +444,7 @@ const Accueil = ({ equipmentList }) => {
             </motion.div>
 
             {/* Stat 3 - Dernière mise à jour */}
-            <motion.div 
+            <motion.div
               className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors duration-300"
               whileHover={{ scale: 1.02 }}
             >
@@ -464,7 +453,7 @@ const Accueil = ({ equipmentList }) => {
               </h3>
               {recentEquipments.length > 0 && (
                 <div className="flex items-start">
-                  <motion.div 
+                  <motion.div
                     className="bg-blue-100 text-blue-600 p-2 rounded-lg mr-3"
                     animate={{
                       rotate: [0, 10, -10, 0],
@@ -472,7 +461,7 @@ const Accueil = ({ equipmentList }) => {
                     transition={{
                       duration: 2,
                       repeat: Infinity,
-                      repeatDelay: 3
+                      repeatDelay: 3,
                     }}
                   >
                     <svg
@@ -521,7 +510,7 @@ const Accueil = ({ equipmentList }) => {
         className="mb-16"
       >
         <div className="flex justify-between items-center mb-6">
-          <motion.h2 
+          <motion.h2
             className="text-2xl font-bold text-gray-900"
             whileHover={{ scale: 1.02 }}
           >
@@ -539,9 +528,9 @@ const Accueil = ({ equipmentList }) => {
             </motion.span>
             <motion.span
               animate={{ x: [0, 5, 0] }}
-              transition={{ 
+              transition={{
                 duration: 1.5,
-                repeat: Infinity
+                repeat: Infinity,
               }}
               className="ml-1"
             >
@@ -558,18 +547,18 @@ const Accueil = ({ equipmentList }) => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  {["Type", "Marque", "Modèle", "N° Série", "Statut"].map((header) => (
-                    <th 
-                      key={header}
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      <motion.div
-                        whileHover={{ scale: 1.05 }}
+                  {["Type", "Marque", "Modèle", "N° Série", "Statut"].map(
+                    (header) => (
+                      <th
+                        key={header}
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
-                        {header}
-                      </motion.div>
-                    </th>
-                  ))}
+                        <motion.div whileHover={{ scale: 1.05 }}>
+                          {header}
+                        </motion.div>
+                      </th>
+                    )
+                  )}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -624,7 +613,7 @@ const Accueil = ({ equipmentList }) => {
         viewport={{ once: true }}
         className="mb-16"
       >
-        <motion.h2 
+        <motion.h2
           className="text-2xl font-bold text-gray-900 mb-6"
           whileHover={{ scale: 1.02 }}
         >
@@ -639,9 +628,9 @@ const Accueil = ({ equipmentList }) => {
             1024: { slidesPerView: 3 },
           }}
           navigation
-          pagination={{ 
+          pagination={{
             clickable: true,
-            dynamicBullets: true
+            dynamicBullets: true,
           }}
           loop={true}
           autoplay={{
@@ -653,7 +642,7 @@ const Accueil = ({ equipmentList }) => {
         >
           {equipmentData.map((item) => (
             <SwiperSlide key={item.id}>
-              <motion.div 
+              <motion.div
                 className="relative h-80 group"
                 whileHover={{ scale: 1.03 }}
               >
@@ -662,7 +651,7 @@ const Accueil = ({ equipmentList }) => {
                   alt={item.title || item.model}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <motion.div 
+                <motion.div
                   className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end p-6"
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
