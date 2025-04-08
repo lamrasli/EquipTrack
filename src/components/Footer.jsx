@@ -1,24 +1,24 @@
 import React from "react";
-import { FaFacebookF, FaTwitter, FaLinkedinIn, FaMapMarkerAlt, FaPhone, FaEnvelope } from "react-icons/fa";
+import { FaFacebookF, FaLinkedinIn, FaMapMarkerAlt, FaPhone, FaEnvelope } from "react-icons/fa";
 import { motion } from "framer-motion";
 import Royaume from "../assets/images/Royaume.png";
-
+import { RiTwitterXFill } from "react-icons/ri";
 
 function Footer() {
   const socialLinks = [
     { 
       icon: <FaFacebookF size={14} />, 
-      url: "https://www.facebook.com/MAECMaroc",
+      url: "https://www.facebook.com/MarocDiplomatie/",
       color: "hover:bg-blue-100 hover:text-blue-600"
     },
     { 
-      icon: <FaTwitter size={14} />, 
+      icon: <RiTwitterXFill  size={14} />, 
       url: "https://twitter.com/MarocDiplomatie",
       color: "hover:bg-blue-100 hover:text-blue-400"
     },
     { 
       icon: <FaLinkedinIn size={14} />, 
-      url: "https://www.linkedin.com/company/minist%C3%A8re-des-affaires-%C3%A9trang%C3%A8res-maroc/",
+      url: "https://www.linkedin.com/company/maroc-diplomatie",
       color: "hover:bg-blue-100 hover:text-blue-700"
     }
   ];
